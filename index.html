@@ -22,6 +22,13 @@ body{font-family:'Pretendard','Malgun Gothic',sans-serif;background:#0b1026;colo
  .title{font-size:clamp(22px,4vw,38px)}
  .btn{padding:12px 28px;font-size:16px}
 }
+@media (orientation:landscape) and (max-height:520px){
+ .btn-sub{padding:6px 10px;font-size:12px}
+ #comboText{font-size:13px}#scoreText{font-size:14px;min-width:80px}
+ #keyHint{font-size:10px;padding:10px 4px 4px}
+ #judgePopup{font-size:22px}
+ #countdown{font-size:60px}
+}
 /* 타이틀 */
 .title{font-size:clamp(28px,5vw,56px);font-weight:900;letter-spacing:-1px;text-align:center;line-height:1.1}
 .title span{background:linear-gradient(90deg,#ffcb05,#ff3d5a,#3b82f6);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -90,7 +97,7 @@ input[type=range]{accent-color:#ffcb05}
 <div id="select-screen" class="screen">
   <div class="pokeball"></div>
   <div class="title"><span>Pokémon Rhythm Stage!</span><br>프세카풍 리듬게임</div>
-  <div class="subtitle">⚡ 5레인 낙하형 • 탭 / 홀드 / 플릭 • 오마주 9곡 + 적녹 원곡 스트리밍</div>
+  <div class="subtitle">⚡ 5레인 낙하형 • 탭 / 홀드 / 플릭 • 오마주 9곡 + 적녹 원곡 스트리밍 2곡</div>
   <div id="songList"></div>
   <div class="diff-row" id="diffRow">
     <button class="diff-btn" data-diff="EASY">EASY<span class="lv">Lv.5 ★★★★★</span></button>
@@ -121,7 +128,7 @@ input[type=range]{accent-color:#ffcb05}
     🎺 마크 곡은 원곡 스트리밍(인터넷 필요). 박자가 어긋나면 ⚙ BPM 버튼으로 조절<br>
     ※ 곡명은 실제 포켓몬 BGM을 오마주한 것으로, 멜로디는 저작권 회피를 위한 오리지널 칩튠입니다(원곡 음원 아님). 진짜 BGM으로 하고 싶으면 mp3를 직접 업로드하세요! (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">오마주 9곡 + 원곡 스트리밍 • 원곡은 URL 재생(레포 미포함) • v1.7</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">오마주 9곡 + 원곡 스트리밍 • 원곡은 URL 재생(레포 미포함) • v1.8</div>
 </div>
 
 <!-- 게임 -->
@@ -219,7 +226,10 @@ const SONGS=[
 const STREAMS=[
  {id:20,emoji:'🎺',title:'1번도로 (적·녹) [원곡]',sub:'Route 1 Original • archive.org 스트리밍',bpm:140,isStream:true,
   url:'https://ia601400.us.archive.org/20/items/pkmn-rgby-soundtrack/Disc%201/11%20-%20Route%201.mp3#t=0',
-  jacket:'linear-gradient(135deg,#facc15,#16a34a)',durSec:0}
+  jacket:'linear-gradient(135deg,#facc15,#16a34a)',durSec:0},
+ {id:21,emoji:'🎺',title:'3번도로 (적·녹) [원곡]',sub:'Route 3 Original • archive.org 스트리밍',bpm:140,isStream:true,
+  url:'https://ia801400.us.archive.org/20/items/pkmn-rgby-soundtrack/Disc%201/27%20-%20Route%203.mp3#t=0',
+  jacket:'linear-gradient(135deg,#38bdf8,#16a34a)',durSec:0}
 ];
 let streamEl=null;
 function getStream(){if(!streamEl){streamEl=new Audio();streamEl.preload='auto'}return streamEl}
@@ -434,7 +444,8 @@ let lastComboShown=0,comboPop=0;
 function hexA(hex,a){const h=hex.replace('#','');return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`}
 function jColor(j){return j==='perfect'?'#ffd700':j==='great'?'#4ade80':j==='miss'?'#f43f5e':'#60a5fa'}
 function laneX(l){const W=cv.clientWidth||560;return l*(W/5)+W/10}
-function judgeYOf(){return (cv.clientHeight||700)-130}
+function judgeMargin(H){return H<520?92:130} // 가로 모드(낮은 화면)에선 판정선 여백 축소
+function judgeYOf(){const H=cv.clientHeight||700;return H-judgeMargin(H)}
 function spawnBurst(lane,color,n){
  const x=laneX(lane),y=judgeYOf();
  for(let i=0;i<(n||10);i++){
@@ -443,9 +454,17 @@ function spawnBurst(lane,color,n){
  }
  if(particles.length>240)particles.splice(0,particles.length-240);
 }
+// 홀드 실제 누름 추적 (레인별 중복 카운트) + 타격 시 뜨는 콤보 텍스트
+const heldCount={};
+function holdOn(l){heldCount[l]=(heldCount[l]||0)+1}
+function holdOff(l){heldCount[l]=Math.max(0,(heldCount[l]||0)-1)}
+function isHeld(l){return (heldCount[l]||0)>0}
+const holdMap={}; // pointerId별 홀드 레인 (스와이프 후 up 누락 방지)
+let floatTexts=[];
+function spawnFloat(lane,txt,color){floatTexts.push({x:laneX(lane),y:judgeYOf()-40,txt,color,life:0.7,max:0.7});if(floatTexts.length>40)floatTexts.shift()}
 // 등속 슬라이드: 속도 설정 → 초당 픽셀(px/sec)로 고정. 프세카처럼 항상 같은 속도로 내려옴
 function pxPerSec(){return 180+speed*70} // 속도 2→320, 5→530, 10→880 px/s
-function scrollSecFor(){const H=cv.clientHeight||Math.max(400,Math.min(900,window.innerHeight));return (H-130)/pxPerSec()}
+function scrollSecFor(){const H=cv.clientHeight||Math.max(400,Math.min(900,window.innerHeight));return (H-judgeMargin(H))/pxPerSec()}
 
 document.getElementById('speed').oninput=e=>{speed=+e.target.value;document.getElementById('speedVal').textContent=speed.toFixed(1)};
 document.getElementById('auto').onchange=e=>autoPlay=e.target.checked;
@@ -532,7 +551,11 @@ document.getElementById('pauseBtn').onclick=()=>{
 document.getElementById('fsBtn').onclick=()=>{
  try{
   if(document.fullscreenElement)document.exitFullscreen();
-  else document.documentElement.requestFullscreen();
+  else{
+   const p=document.documentElement.requestFullscreen();
+   if(p&&p.catch)p.catch(()=>{});
+   try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{})}catch(e2){} // 가로 모드 고정 시도
+  }
  }catch(e){}
  setTimeout(fitCanvas,300);
 };
@@ -545,12 +568,12 @@ addEventListener('keydown',e=>{
  if(document.getElementById('game-screen').classList.contains('hidden'))return;
  if(e.repeat)return;
  const l=keyToLane[e.key.toLowerCase()];if(l===undefined)return;
- e.preventDefault();pressLane(l);
+ e.preventDefault();holdOn(l);pressLane(l);
  flickDown[l]=(songPlaying&&!paused)?songTime():null;
 });
 addEventListener('keyup',e=>{
  const l=keyToLane[e.key.toLowerCase()];if(l===undefined)return;
- releaseLane(l);
+ holdOff(l);releaseLane(l);
  // 키보드 플릭: 짧게 끊어치듯 눌렀다 떼야만 인정 (누르고 있기만 하면 MISS)
  if(flickDown[l]!=null){
   const t=(songPlaying&&!paused)?songTime():null;
@@ -569,10 +592,12 @@ cv.addEventListener('pointerdown',e=>{
  const r=cv.getBoundingClientRect();
  const l=Math.max(0,Math.min(4,Math.floor((e.clientX-r.left)/r.width*5)));
  touchMap[e.pointerId]={lane:l,y:e.clientY,t:performance.now()};
+ holdOn(l);holdMap[e.pointerId]=l;
  pressLane(l); // 탭/홀드만 판정 (플릭은 스와이프해야 맞음)
  try{cv.setPointerCapture(e.pointerId)}catch(err){}
 });
 const endTouch=e=>{
+ if(holdMap[e.pointerId]!=null){holdOff(holdMap[e.pointerId]);delete holdMap[e.pointerId]}
  const info=touchMap[e.pointerId];
  if(info){releaseLane(info.lane);delete touchMap[e.pointerId]}
 };
@@ -637,17 +662,17 @@ function releaseLane(lane){
   if(n.kind==='hold'&&n.holdState==='holding'&&n.lane===lane){
    const tailT=n.time+n.dur;
    const dt=tailT-t;
-   if(Math.abs(dt)<=0.15){tailHit(n,'perfect')}else if(dt<-0.15){tailHit(n,'miss')}else{tailHit(n,dt>0?'great':'good')}
+   if(Math.abs(dt)<=0.15){tailHit(n,'perfect')}else{tailHit(n,'miss')} // 일찍 떼면 무조건 MISS (꾹 눌러야 점수)
   }
  }
 }
 function hitNote(n,j,lane){
  if(n.kind==='hold'){
   n.judged=true;n.holdState='holding';n.holdLane=lane;
-  applyJudge(j);effects.push({lane,time:performance.now(),txt:j});spawnBurst(lane,jColor(j),8);
+  applyJudge(j);effects.push({lane,time:performance.now(),txt:j});spawnBurst(lane,jColor(j),8);spawnFloat(lane,combo+' COMBO',jColor(j));
   hitSE(true);
  }else{
-  n.judged=true;applyJudge(j);
+  n.judged=true;applyJudge(j);spawnFloat(lane,combo+' COMBO',jColor(j));
   effects.push({lane,time:performance.now(),txt:j});spawnBurst(lane,jColor(j),12);
   hitSE(j!=='good'||true);
   popup(j);
@@ -656,7 +681,7 @@ function hitNote(n,j,lane){
 function tailHit(n,j){
  n.holdState='done';n.tailJudged=true;
  if(j==='miss'){combo=0;counts.miss++;life=Math.max(0,life-6);popup('miss');spawnBurst(n.lane,'#f43f5e',6);hitSE(false)}
- else{applyJudge(j);popup(j);spawnBurst(n.lane,jColor(j),12);hitSE(true)}
+ else{applyJudge(j);popup(j);spawnBurst(n.lane,jColor(j),12);spawnFloat(n.lane,combo+' COMBO',jColor(j));hitSE(true)}
 }
 function applyJudge(j){
  if(j==='perfect'){score+=10000/notes.length*1.0;combo++;maxCombo=Math.max(maxCombo,combo);counts.perfect++;life=Math.min(100,life+1)}
@@ -688,16 +713,19 @@ function loop(){
  // 오토플레이
  if(autoPlay){
   for(const n of notes){
-   if(!n.judged&&t>=n.time){n.judged=true;if(n.kind==='hold'){n.holdState='done';n.tailJudged=true}applyJudgeAuto(n);effects.push({lane:n.lane,time:performance.now(),txt:'perfect'});spawnBurst(n.lane,'#ffd700',8);popup('perfect')}
+   if(!n.judged&&t>=n.time){n.judged=true;if(n.kind==='hold'){n.holdState='done';n.tailJudged=true}applyJudgeAuto(n);effects.push({lane:n.lane,time:performance.now(),txt:'perfect'});spawnBurst(n.lane,'#ffd700',8);spawnFloat(n.lane,combo+' COMBO','#ffd700');popup('perfect')}
   }
  }
  // 홀드 실패(놓침) 체크
  for(const n of notes){
-  if(n.kind==='hold'&&n.holdState==='holding'){
-   // 손을 떼지 않고 있으면 자동 유지 (키보드 떼면 releaseLane에서 처리). 일정 시간 지나면 성공으로 간주하려면 키가 눌려있어야 하는데,
-   // 단순화를 위해 홀드 중이면 꼬리 시간 도달 시 자동 성공 (라이트 모드)
-   if(t>=n.time+n.dur-0.05&&!n.tailJudged){n.holdState='done';n.tailJudged=true;applyJudgeSimple('perfect');popup('perfect')}
-  }
+   if(n.kind==='hold'&&n.holdState==='holding'){
+    // 실제로 꾹 누르고 있을 때만 꼬리 성공 (안 누르면 점수 없음)
+    if(t>=n.time+n.dur-0.05&&!n.tailJudged){
+     if(isHeld(n.lane)){n.holdState='done';n.tailJudged=true;applyJudgeSimple('perfect');spawnBurst(n.lane,'#4ade80',10);spawnFloat(n.lane,combo+' COMBO','#4ade80');popup('perfect')}
+    }else if(!n.tailJudged&&t>n.time+n.dur+0.15&&!isHeld(n.lane)){
+     n.holdState='done';n.tailJudged=true;combo=0;counts.miss++;life=Math.max(0,life-8);popup('miss');hitSE(false);
+    }
+   }
   if(!n.judged&&n.kind!=='hold'&&t-n.time>0.13){n.judged=true;combo=0;counts.miss++;life=Math.max(0,life-8);popup('miss');hitSE(false)}
   if(n.kind==='hold'&&!n.judged&&t-n.time>0.13){n.judged=true;n.holdState='done';n.tailJudged=true;combo=0;counts.miss++;life=Math.max(0,life-8);popup('miss')}
  }
@@ -710,6 +738,8 @@ function loop(){
  comboPop=Math.max(0,comboPop-frameDt*4);
  for(const p of particles){p.x+=p.vx*frameDt;p.y+=p.vy*frameDt;p.vy+=500*frameDt;p.rot+=frameDt*6;p.life-=frameDt}
  particles=particles.filter(p=>p.life>0);
+ for(const f of floatTexts){f.y-=70*frameDt;f.life-=frameDt}
+ floatTexts=floatTexts.filter(f=>f.life>0);
  draw(t,frameDt);
  // HUD
  document.getElementById('scoreText').textContent=Math.floor(score).toLocaleString();
@@ -761,7 +791,7 @@ function draw(t,frameDt){
  }
  ctx.globalAlpha=1;
  const laneW=W/LANES;
-  const judgeY=H-130; // 하단 오버레이 힌트와 겹치지 않게
+  const judgeY=H-judgeMargin(H); // 하단 오버레이 힌트와 겹치지 않게 (가로 모드 대응)
  const vpx=pxPerSec(); // 등속: 항상 같은 px/s로 미끄러짐
  const scrollWin=judgeY/vpx; // 노트가 화면에 보이는 시간(초)
  // 레인: 은은한 세로 그라데이션 + 곡 컬러 구분선
@@ -785,7 +815,7 @@ function draw(t,frameDt){
  ctx.fillStyle=c1;ctx.fillRect(0,judgeY-2.5,W,5);
  ctx.restore();
  ctx.fillStyle='rgba(255,255,255,.9)';ctx.fillRect(0,judgeY-1,W,2);
- const recW=laneW*0.86,recH=22;
+ const recW=Math.min(laneW*0.86,170),recH=22; // 가로 모드에서 너무 커지지 않게 상한
  for(let i=0;i<LANES;i++){
   const x=i*laneW+laneW/2,f=laneFlash[i]||0;
   const rw=recW+f*22,rh=recH+f*10;
@@ -798,7 +828,7 @@ function draw(t,frameDt){
  ctx.globalAlpha=1;
  // 노트 (프세카식 네모 막대)
  const trailLen=vpx*0.085; // 슬라이드 잔상 길이 (이동 방향 뒤쪽)
- const noteW=laneW*0.86; // 노트 막대 너비 (레인 폭 기준)
+ const noteW=Math.min(laneW*0.86,170); // 노트 막대 너비 (가로 모드 상한)
  for(const n of notes){
   const dtn=n.time-t;
   if(dtn>scrollWin+0.15||dtn<-0.6)continue;
@@ -886,10 +916,20 @@ function draw(t,frameDt){
   ctx.restore();
  }
  ctx.globalAlpha=1;
- // 콤보 스플래시 (판정선 아래)
- if(combo>1){
+ // 타격 시 뜨는 콤보 텍스트 (레인 위로 상승)
+ for(const f of floatTexts){
+  ctx.globalAlpha=Math.max(0,f.life/f.max);
+  ctx.save();ctx.textAlign='center';ctx.shadowColor=f.color;ctx.shadowBlur=10;
+  ctx.fillStyle='#fff';ctx.font='900 19px sans-serif';
+  ctx.fillText(f.txt,f.x,f.y);
+  ctx.restore();
+ }
+ ctx.globalAlpha=1;
+ // 콤보 스플래시 (타격마다 표시)
+ if(combo>=1){
   const cs=1+comboPop*0.45;
-  ctx.save();ctx.translate(W/2,judgeY+54);ctx.scale(cs,cs);
+  const comboY=H<520?judgeY-72:judgeY+54;
+  ctx.save();ctx.translate(W/2,comboY);ctx.scale(cs,cs);
   ctx.textAlign='center';ctx.shadowColor='#ffcb05';ctx.shadowBlur=14;
   ctx.fillStyle='#fff';ctx.font='900 24px sans-serif';
   ctx.fillText(combo,0,0);
