@@ -57,18 +57,18 @@ body{font-family:'Pretendard','Malgun Gothic',sans-serif;background:#0b1026;colo
 label.opt{font-size:13px;color:#cbd5e1;display:flex;align-items:center;gap:8px;background:#ffffff0d;padding:8px 12px;border-radius:10px}
 /* 게임 화면 */
 #game-screen{padding:0;justify-content:flex-start;align-items:stretch}
-#topHud{width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;z-index:5}
+#topHud{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:10px;padding:10px 14px 26px;z-index:5;background:linear-gradient(180deg,rgba(5,5,20,.7),transparent)}
 #lifeBarWrap{flex:1;height:12px;background:#ffffff22;border-radius:20px;overflow:hidden}
 #lifeBar{height:100%;width:100%;background:linear-gradient(90deg,#4ade80,#a3e635);transition:width .2s}
 #scoreText{font-weight:900;font-size:20px;min-width:110px;text-align:right}
 #comboText{font-weight:900;color:#ffcb05}
 #gameWrap{position:relative;width:100%;flex:1;display:flex;justify-content:center}
-canvas#game{width:100%;height:calc(100vh - 132px);height:calc(100dvh - 132px);background:rgba(0,0,0,.35);border-top:2px solid #ffffff22;border-bottom:2px solid #ffffff22;touch-action:none;display:block}
+canvas#game{width:100%;height:100vh;height:100dvh;background:rgba(0,0,0,.35);touch-action:none;display:block}
  #judgePopup{position:absolute;top:62%;left:50%;transform:translateX(-50%);font-weight:900;font-size:30px;pointer-events:none;text-shadow:0 2px 12px #000,0 0 24px rgba(255,255,255,.25);will-change:transform;white-space:nowrap}
 #countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:90px;font-weight:900;text-shadow:0 4px 30px #000}
 /* 판정 색 */
 .j-perfect{color:#ffd700}.j-great{color:#4ade80}.j-good{color:#60a5fa}.j-miss{color:#f43f5e}
-#keyHint{display:flex;gap:6px;justify-content:center;padding:8px;font-size:12px;color:#94a3b8}
+#keyHint{position:absolute;bottom:0;left:0;right:0;display:flex;gap:6px;justify-content:center;padding:18px 8px 8px;font-size:12px;color:#94a3b8;background:linear-gradient(0deg,rgba(5,5,20,.7),transparent);pointer-events:none;z-index:5}
 /* 결과 */
 #result-card{background:rgba(255,255,255,.1);backdrop-filter:blur(16px);border-radius:24px;padding:28px;width:min(480px,94vw);text-align:center;border:2px solid #ffffff33}
 #rank{font-size:84px;font-weight:900;line-height:1}
@@ -93,10 +93,10 @@ input[type=range]{accent-color:#ffcb05}
   <div class="subtitle">⚡ 5레인 낙하형 • 탭 / 홀드 / 플릭 • 오마주 9곡 + 적녹 원곡 스트리밍</div>
   <div id="songList"></div>
   <div class="diff-row" id="diffRow">
-    <button class="diff-btn" data-diff="EASY">EASY<span class="lv">Lv.4 ★★★★</span></button>
-    <button class="diff-btn active" data-diff="NORMAL">NORMAL<span class="lv">Lv.7 ★★★★★★★</span></button>
-    <button class="diff-btn" data-diff="HARD">HARD<span class="lv">Lv.10 ★★★★★★★★★★</span></button>
-    <button class="diff-btn" data-diff="EXPERT">EXPERT<span class="lv">Lv.14 ★×14</span></button>
+    <button class="diff-btn" data-diff="EASY">EASY<span class="lv">Lv.5 ★★★★★</span></button>
+    <button class="diff-btn active" data-diff="NORMAL">NORMAL<span class="lv">Lv.8 ★★★★★★★★</span></button>
+    <button class="diff-btn" data-diff="HARD">HARD<span class="lv">Lv.11 ★×11</span></button>
+    <button class="diff-btn" data-diff="EXPERT">EXPERT<span class="lv">Lv.15 ★×15</span></button>
   </div>
   <div id="diffInfo"></div>
   <div class="row">
@@ -121,7 +121,7 @@ input[type=range]{accent-color:#ffcb05}
     🎺 마크 곡은 원곡 스트리밍(인터넷 필요). 박자가 어긋나면 ⚙ BPM 버튼으로 조절<br>
     ※ 곡명은 실제 포켓몬 BGM을 오마주한 것으로, 멜로디는 저작권 회피를 위한 오리지널 칩튠입니다(원곡 음원 아님). 진짜 BGM으로 하고 싶으면 mp3를 직접 업로드하세요! (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">오마주 9곡 + 원곡 스트리밍 • 원곡은 URL 재생(레포 미포함) • v1.6</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">오마주 9곡 + 원곡 스트리밍 • 원곡은 URL 재생(레포 미포함) • v1.7</div>
 </div>
 
 <!-- 게임 -->
@@ -178,39 +178,39 @@ const starArr=Array.from({length:120},()=>({x:Math.random()*innerWidth,y:Math.ra
 const mf=m=>440*Math.pow(2,(m-69)/12);
 // 각 곡: bpm, 8마디 루프 멜로디(midi, 길이는 beats)
 const SONGS=[
- {id:0,emoji:'🌿',title:'1번도로 (적·녹)',sub:'Route 1 • 모험의 시작!',bpm:112,color1:'#4ade80',color2:'#16a34a',
+ {id:0,emoji:'🌿',title:'1번도로 (적·녹)',sub:'Route 1 • 모험의 시작!',bpm:142,color1:'#4ade80',color2:'#16a34a',
   chords:[[48,52,55],[43,47,50],[45,48,52],[41,45,48]], // C G Am F
   melody:[76,79,81,79,76,74,72,0, 76,79,81,84,81,79,76,0, 77,81,83,81,77,76,74,0, 72,74,76,74,72,0,0,0],
   bassRoot:[36,31,33,29],jacket:'linear-gradient(135deg,#4ade80,#0284c7)'},
- {id:1,emoji:'💤',title:'포켓몬센터 (적·녹)',sub:'Pokemon Center • 상처를 치유해!',bpm:84,color1:'#f9a8d4',color2:'#8b5cf6',
+ {id:1,emoji:'💤',title:'포켓몬센터 (적·녹)',sub:'Pokemon Center • 상처를 치유해!',bpm:112,color1:'#f9a8d4',color2:'#8b5cf6',
   chords:[[48,52,55],[45,48,52],[41,45,48],[43,47,50]],
   melody:[72,76,79,76,72,0,74,0, 72,76,79,84,79,76,74,0, 72,74,76,74,72,0,0,0, 67,72,0,0,0,0,0,0],
   bassRoot:[36,33,29,31],jacket:'linear-gradient(135deg,#f9a8d4,#6366f1)'},
- {id:2,emoji:'🔥',title:'VS 체육관 관장 (적·녹)',sub:'Gym Leader • 배지를 걸어라!',bpm:152,color1:'#f87171',color2:'#f59e0b',
+ {id:2,emoji:'🔥',title:'VS 체육관 관장 (적·녹)',sub:'Gym Leader • 배지를 걸어라!',bpm:176,color1:'#f87171',color2:'#f59e0b',
   chords:[[40,43,47],[38,41,45],[36,40,43],[43,47,50]],
   melody:[76,76,79,76,81,79,76,74, 76,76,79,76,84,81,79,76, 77,77,81,77,83,81,79,77, 76,74,76,72,74,76,0,0],
   bassRoot:[28,26,24,31],jacket:'linear-gradient(135deg,#ef4444,#f59e0b)'},
- {id:3,emoji:'⚡',title:'VS 라이벌 (적·녹)',sub:'Rival • 그린을 이겨라!',bpm:128,color1:'#facc15',color2:'#eab308',
+ {id:3,emoji:'⚡',title:'VS 라이벌 (적·녹)',sub:'Rival • 그린을 이겨라!',bpm:162,color1:'#facc15',color2:'#eab308',
   chords:[[48,52,55],[41,45,48],[43,47,50],[48,52,55]], // C F G C
   melody:[76,79,84,84,83,79,81,79, 76,79,84,86,84,81,79,76, 77,81,84,84,83,79,81,79, 76,74,72,74,76,0,72,0],
   bassRoot:[36,29,31,36],jacket:'linear-gradient(135deg,#facc15,#f97316)'},
- {id:4,emoji:'🌊',title:'19번수로 파도타기 (적·녹)',sub:'Surf • 바다를 건너라!',bpm:120,color1:'#38bdf8',color2:'#0284c7',
+ {id:4,emoji:'🌊',title:'19번수로 파도타기 (적·녹)',sub:'Surf • 바다를 건너라!',bpm:152,color1:'#38bdf8',color2:'#0284c7',
   chords:[[43,47,50],[40,43,47],[48,52,55],[38,42,45]], // G Em C D
   melody:[74,76,79,81,83,81,79,76, 74,76,79,83,81,79,76,74, 76,79,81,83,86,83,81,79, 81,79,76,74,76,0,74,0],
   bassRoot:[31,28,36,26],jacket:'linear-gradient(135deg,#38bdf8,#0ea5e9)'},
- {id:5,emoji:'🌙',title:'달맞이산 (적·녹)',sub:'Mt. Moon • 어둠 속 탐험',bpm:72,color1:'#a5b4fc',color2:'#6d28d9',
+ {id:5,emoji:'🌙',title:'달맞이산 (적·녹)',sub:'Mt. Moon • 어둠 속 탐험',bpm:104,color1:'#a5b4fc',color2:'#6d28d9',
   chords:[[45,48,52],[41,45,48],[48,52,55],[43,47,50]], // Am F C G
   melody:[76,0,81,0,79,0,76,0, 74,0,72,0,74,0,76,0, 76,0,81,0,84,0,83,0, 81,0,79,0,76,0,0,0],
   bassRoot:[33,29,36,31],jacket:'linear-gradient(135deg,#312e81,#7c3aed)'},
- {id:6,emoji:'🏆',title:'VS 챔피언 (적·녹)',sub:'Champion • 최후의 결전!',bpm:160,color1:'#f0abfc',color2:'#7c3aed',
+ {id:6,emoji:'🏆',title:'VS 챔피언 (적·녹)',sub:'Champion • 최후의 결전!',bpm:186,color1:'#f0abfc',color2:'#7c3aed',
   chords:[[40,43,47],[48,52,55],[38,42,45],[40,43,47]], // Em C D Em
   melody:[76,76,79,76,81,79,76,74, 76,76,79,76,83,81,79,76, 84,83,81,79,81,83,84,86, 88,86,84,83,81,79,76,0],
   bassRoot:[28,36,26,28],jacket:'linear-gradient(135deg,#a855f7,#ec4899)'},
- {id:7,emoji:'🕶',title:'로켓단 아지트 (적·녹)',sub:'Rocket Hideout • 몰래 잠입!',bpm:132,color1:'#64748b',color2:'#0f172a',
+ {id:7,emoji:'🕶',title:'로켓단 아지트 (적·녹)',sub:'Rocket Hideout • 몰래 잠입!',bpm:166,color1:'#64748b',color2:'#0f172a',
   chords:[[52,55,59],[52,55,59],[57,60,64],[59,63,66]], // Em Em Am B
   melody:[64,0,64,67,0,64,0,62, 64,0,64,67,69,0,67,0, 64,0,64,67,0,64,0,62, 60,62,64,0,62,0,0,0],
   bassRoot:[40,40,45,47],jacket:'linear-gradient(135deg,#334155,#000000)'},
- {id:8,emoji:'🌆',title:'금빛시티 (금·은)',sub:'Goldenrod • 성도의 아침!',bpm:124,color1:'#f9a8d4',color2:'#f59e0b',
+ {id:8,emoji:'🌆',title:'금빛시티 (금·은)',sub:'Goldenrod • 성도의 아침!',bpm:156,color1:'#f9a8d4',color2:'#f59e0b',
   chords:[[48,52,55],[45,48,52],[41,45,48],[43,47,50]], // C Am F G
   melody:[72,76,79,76,81,79,76,74, 72,76,79,81,79,76,74,76, 77,81,84,81,79,81,77,76, 74,76,79,76,72,0,67,0],
   bassRoot:[36,33,29,31],jacket:'linear-gradient(135deg,#f472b6,#fbbf24)'}
@@ -241,10 +241,10 @@ let selectedSong=SONGS[1];
 let selectedDiff='NORMAL';
 // 4단계 난이도: 밀도(mult), 최소 간격, 동시치기/플릭/연타 확률로 명확히 차별화
 const DIFFS={
- EASY:{mult:0.50,name:'EASY',level:4,minGap:0.28,globalGap:0.16,hold:true,flick:true,flickRate:0.05,doubleRate:0,streamRate:0,desc:'입문용 • 탭+홀드 중심, 가끔 플릭'},
- NORMAL:{mult:0.80,name:'NORMAL',level:7,minGap:0.16,globalGap:0.10,hold:true,flick:true,flickRate:0.10,doubleRate:0.15,streamRate:0,desc:'본격 리듬게임 • 동시치기 입문'},
- HARD:{mult:1.00,name:'HARD',level:10,minGap:0.12,globalGap:0.075,hold:true,flick:true,flickRate:0.16,doubleRate:0.35,streamRate:0.12,desc:'동시치기+연타 • 손이 바빠져요'},
- EXPERT:{mult:1.25,name:'EXPERT',level:14,minGap:0.08,globalGap:0.05,hold:true,flick:true,flickRate:0.20,doubleRate:0.5,streamRate:0.18,desc:'고속 연타+동시치기 • 풀콤보 도전'}
+ EASY:{mult:0.62,name:'EASY',level:5,minGap:0.24,globalGap:0.14,hold:true,flick:true,flickRate:0.08,doubleRate:0.08,streamRate:0,desc:'입문용 • 템포 업! 가끔 플릭+동시치기'},
+ NORMAL:{mult:0.95,name:'NORMAL',level:8,minGap:0.13,globalGap:0.085,hold:true,flick:true,flickRate:0.14,doubleRate:0.25,streamRate:0.08,desc:'빠른 템포 • 동시치기+연타 맛보기'},
+ HARD:{mult:1.15,name:'HARD',level:11,minGap:0.10,globalGap:0.06,hold:true,flick:true,flickRate:0.20,doubleRate:0.45,streamRate:0.16,desc:'고속 • 동시치기+연타 본격'},
+ EXPERT:{mult:1.4,name:'EXPERT',level:15,minGap:0.07,globalGap:0.045,hold:true,flick:true,flickRate:0.24,doubleRate:0.6,streamRate:0.22,desc:'극악 • 초고속 연타+더블 점프'}
 };
 function updateDiffInfo(){
  const el=document.getElementById('diffInfo');if(!el)return;
@@ -292,66 +292,101 @@ function buildChart(song,diffKey){
  const D=DIFFS[diffKey];const beat=60/song.bpm;const notes=[];
  const push=(lane,time,dur,kind)=>notes.push({lane,time,dur:dur||0,kind,judged:false,holdState:kind==='hold'?'wait':null,tailJudged:false});
  if(song.isCustom||song.isStream){
-  // 커스텀 mp3: BPM 기준으로 랜덤 생성 (난이도별 밀도/기믹 차별화)
+  // 커스텀/스트리밍: 계단 흐름 위주 — 같은 방향으로 이어가다 벽에서 반사
   const totalBeats=Math.floor(song.durSec/beat);
-  let lane=2;
+  let lane=2,dir=0;
   for(let b=4;b<totalBeats-4;b++){
    if(Math.random()<D.mult*0.75){
-    lane=Math.max(0,Math.min(4,lane+[-2,-1,-1,1,1,2][Math.floor(Math.random()*6)]));
+    const sr=Math.random();
+    let step;
+    if(sr<0.35&&dir!==0)step=dir; // 계단 이어가기
+    else if(sr<0.55){dir=Math.random()<0.5?-1:1;step=dir} // 새 계단
+    else{dir=0;step=[-2,-1,1,2][Math.floor(Math.random()*4)]}
+    lane=Math.max(0,Math.min(4,lane+step));
+    if(lane===0||lane===4)dir=-dir; // 벽 반사
     const t=b*beat;const r=Math.random();
     let kind='tap';
     if(D.hold&&r<0.12)kind='hold';
     else if(D.flick&&r<0.12+D.flickRate)kind='flick';
     push(lane,t,kind==='hold'?beat*2:0,kind);
-    if(Math.random()<D.doubleRate)push((lane+2)%5,t,0,'tap');
+    if(b%8===0&&D.doubleRate>=0.2)push(4-lane,t,0,'tap'); // 강박 거울 동시치기
+    else if(Math.random()<D.doubleRate*0.5)push(4-lane,t,0,'tap');
    }
   }
  }else{
-  // 내장곡: 멜로디 기반 (멜로디 1음 = 0.5박, 32스텝 패턴 반복)
+  // 내장곡: 멜로디 윤곽선 기반 — 음이 오르면 오른쪽, 내리면 왼쪽으로 (계단/물결)
   const loopLen=song.melody.length; // 32
   const stepBeat=0.5;
   const totalDur=72; // 약 70초 라이브
   const steps=Math.floor(totalDur/(beat*stepBeat));
-  let laneSeed=2;
-  for(let s=8;s<steps-8;s++){ // 앞 4박 여유
+  const pits=song.melody.filter(m=>m>0);
+  const lo=Math.min(...pits),hi=Math.max(...pits);
+  const pitchLane=m=>Math.max(0,Math.min(4,Math.round((m-lo)/((hi-lo)||1)*4)));
+  let s=8,barCount=0; // 앞 4박 여유
+  while(s<steps-8){
    const mel=song.melody[s%loopLen];
    const time=s*stepBeat*beat;
    const barPos=s%16;
-   const isMelody=mel>0;
-   // 밀도 조절
-   let p=D.mult*(isMelody?0.85:0.22);
-   if(barPos%4===0)p=Math.min(1,p+0.22); // 강박 보정
-   if(diffKey==='EASY'&&barPos%2===1)p*=0.25;
-   if(D.streamRate>0&&!isMelody&&barPos%2===1&&Math.random()<D.streamRate)p=Math.max(p,0.5); // 고속 연타
-   if(Math.random()<p||(isMelody&&barPos%4===0&&diffKey!=='EASY')){
-    laneSeed=isMelody?(mel%5):Math.floor(Math.random()*5);
-    let kind='tap';
-    const rr=Math.random();
-    if(D.hold&&s%32===24)kind='hold';
-    else if(D.flick&&((barPos===12||barPos===14)&&rr<0.3||rr<D.flickRate))kind='flick';
-    push(laneSeed,time,kind==='hold'?beat*2:0,kind);
-    if(barPos%8===4&&Math.random()<D.doubleRate){
-     push((laneSeed+2)%5,time,0,'tap');
+   if(mel>0){
+    const lane=pitchLane(mel);
+    // 같은 음 서스테인 → 길게 늘이는 홀드
+    let run=1;
+    while(run<8&&song.melody[(s+run)%loopLen]===mel)run++;
+    if(run>=3&&D.hold){
+     push(lane,time,Math.min(4,run)*stepBeat*beat,'hold');
+     if(barPos===0&&Math.random()<D.doubleRate*0.5)push(4-lane,time,0,'tap');
+     s+=run;continue;
     }
-    if(diffKey==='EXPERT'&&barPos===0&&Math.random()<0.5){
-     push((laneSeed+3)%5,time,0,Math.random()<0.3?'flick':'tap');
+    // 마디 첫박: 거울 동시치기 — 예쁜 대칭 점프
+    if(barPos===0&&D.doubleRate>0&&Math.random()<D.doubleRate+0.15){
+     const pair=(barCount%2===0)?[0,4]:[1,3];
+     push(pair[0],time,0,'tap');push(pair[1],time,0,'tap');
+     barCount++;s++;continue;
     }
-    if(diffKey==='EXPERT'&&barPos===8&&Math.random()<0.4){
-     push((laneSeed+1)%5,time,0,'tap');
+    // 프레이즈 끝 고정 홀드
+    if(D.hold&&s%32===20){push(lane,time,beat*2,'hold');s++;continue}
+    // 최고음+프레이즈 끝 → 플릭
+    let kind='tap';const rr=Math.random();
+    if(D.flickRate>0){
+     if(rr<D.flickRate)kind='flick';
+     else if(mel>=hi-1&&diffKey!=='EASY'&&rr<D.flickRate+0.18)kind='flick';
     }
+    // 밀도 게이트 (강박은 항상)
+    let p=D.mult*(barPos%4===0?1:0.8);
+    if(diffKey==='EASY'&&barPos%2===1)p*=0.4;
+    if(Math.random()<p||barPos%4===0){
+     let l=lane;
+     if(Math.random()<0.12)l=Math.max(0,Math.min(4,lane+(Math.random()<0.5?-1:1))); // 살짝 흔들기
+     push(l,time,0,kind);
+     if(barPos%8===4&&Math.random()<D.doubleRate)push((lane+2)%5,time,0,'tap');
+    }
+    if(diffKey==='EXPERT'&&barPos===8&&Math.random()<0.4)push((lane+1)%5,time,0,'tap');
+    s++;
+   }else{
+    // 쉼표: 킥 박자에 베이스 노트 (리듬 뼈대)
+    if(barPos%4===0&&Math.random()<D.mult*0.5){
+     push(barCount%2===0?2:(barCount%4===1?1:3),time,0,'tap');
+    }else if(D.streamRate>0&&barPos%2===1&&Math.random()<D.streamRate){
+     push(Math.floor(Math.random()*5),time,0,Math.random()<D.flickRate?'flick':'tap');
+    }
+    s++;
    }
   }
- }
- notes.sort((a,b)=>a.time-b.time);
- // 최소 간격 필터: 같은 레인 minGap, 전체 globalGap 미만 노트 제거 (동시치기는 유지)
+  notes.sort((a,b)=>a.time-b.time);
+ // 최소 간격 필터: 같은 레인 minGap, 전체 globalGap 미만 노트 제거
+ // (같은 레인 동시각 중복은 무조건 제거, 다른 레인 동시치기는 유지)
  const out=[];const lastLane={};let lastAny=-9;
  for(const n of notes){
-  const gapLane=n.time-(lastLane[n.lane]??-9);
+  const prevLane=lastLane[n.lane];
+  const gapLane=n.time-(prevLane??-9);
   const gapAny=n.time-lastAny;
-  if(gapAny>=0.03&&(gapLane<D.minGap||gapAny<D.globalGap))continue;
+  if(prevLane!==undefined&&gapLane<0.03)continue; // 중복 제거
+  const isChord=gapAny<0.03; // 다른 레인 동시치기 유지
+  if(!isChord&&(gapLane<D.minGap||gapAny<D.globalGap))continue;
   out.push(n);lastLane[n.lane]=n.time;lastAny=n.time;
  }
- return out;
+  return out;
+ }
 }
 
 /* 음악 스케줄링 (내장곡) */
@@ -399,7 +434,7 @@ let lastComboShown=0,comboPop=0;
 function hexA(hex,a){const h=hex.replace('#','');return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`}
 function jColor(j){return j==='perfect'?'#ffd700':j==='great'?'#4ade80':j==='miss'?'#f43f5e':'#60a5fa'}
 function laneX(l){const W=cv.clientWidth||560;return l*(W/5)+W/10}
-function judgeYOf(){return (cv.clientHeight||700)-110}
+function judgeYOf(){return (cv.clientHeight||700)-130}
 function spawnBurst(lane,color,n){
  const x=laneX(lane),y=judgeYOf();
  for(let i=0;i<(n||10);i++){
@@ -410,7 +445,7 @@ function spawnBurst(lane,color,n){
 }
 // 등속 슬라이드: 속도 설정 → 초당 픽셀(px/sec)로 고정. 프세카처럼 항상 같은 속도로 내려옴
 function pxPerSec(){return 180+speed*70} // 속도 2→320, 5→530, 10→880 px/s
-function scrollSecFor(){const H=cv.clientHeight||Math.max(400,Math.min(900,window.innerHeight-132));return (H-110)/pxPerSec()}
+function scrollSecFor(){const H=cv.clientHeight||Math.max(400,Math.min(900,window.innerHeight));return (H-130)/pxPerSec()}
 
 document.getElementById('speed').oninput=e=>{speed=+e.target.value;document.getElementById('speedVal').textContent=speed.toFixed(1)};
 document.getElementById('auto').onchange=e=>autoPlay=e.target.checked;
@@ -726,7 +761,7 @@ function draw(t,frameDt){
  }
  ctx.globalAlpha=1;
  const laneW=W/LANES;
- const judgeY=H-110;
+  const judgeY=H-130; // 하단 오버레이 힌트와 겹치지 않게
  const vpx=pxPerSec(); // 등속: 항상 같은 px/s로 미끄러짐
  const scrollWin=judgeY/vpx; // 노트가 화면에 보이는 시간(초)
  // 레인: 은은한 세로 그라데이션 + 곡 컬러 구분선
@@ -744,11 +779,8 @@ function draw(t,frameDt){
    ctx.fillStyle=fg;ctx.fillRect(lx,0,laneW,H);
    laneFlash[i]=Math.max(0,laneFlash[i]-dtF*5);
   }
-  // 키 라벨
-  ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='bold 18px sans-serif';ctx.textAlign='center';
-  ctx.fillText(['S','D','F','J','K'][i],lx+laneW/2,H-28);
- }
- // 판정선: 곡 컬러 네온 + 레인 리셉터 (누르면 부드럽게 커짐)
+  }
+  // 판정선: 곡 컬러 네온 + 레인 리셉터 (누르면 부드럽게 커짐)
  ctx.save();ctx.shadowColor=c1;ctx.shadowBlur=16;
  ctx.fillStyle=c1;ctx.fillRect(0,judgeY-2.5,W,5);
  ctx.restore();
