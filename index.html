@@ -13,6 +13,15 @@ body{font-family:'Pretendard','Malgun Gothic',sans-serif;background:#0b1026;colo
 /* 공통 화면 */
 .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px}
 .hidden{display:none!important}
+/* 선곡/결과 화면은 내용이 길어지면 스크롤(드래그) 가능 — 잘림 방지 */
+#select-screen,#result-screen{justify-content:flex-start;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#select-screen{padding:28px 16px 48px}
+@media (max-height:820px){
+ .song-jacket{height:84px;font-size:42px;margin-bottom:8px}
+ #songList{margin:14px 0}
+ .title{font-size:clamp(22px,4vw,38px)}
+ .btn{padding:12px 28px;font-size:16px}
+}
 /* 타이틀 */
 .title{font-size:clamp(28px,5vw,56px);font-weight:900;letter-spacing:-1px;text-align:center;line-height:1.1}
 .title span{background:linear-gradient(90deg,#ffcb05,#ff3d5a,#3b82f6);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -111,7 +120,7 @@ input[type=range]{accent-color:#ffcb05}
     판정: PERFECT ±45ms / GREAT ±90ms / GOOD ±130ms<br>
     ※ 곡명은 실제 포켓몬 BGM을 오마주한 것으로, 멜로디는 저작권 회피를 위한 오리지널 칩튠입니다(원곡 음원 아님). 진짜 BGM으로 하고 싶으면 mp3를 직접 업로드하세요! (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">실제 BGM 곡명 오마주 9곡 • 멜로디는 오리지널 합성 • 외부 파일 불필요 • v1.2</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">실제 BGM 곡명 오마주 9곡 • 멜로디는 오리지널 합성 • 외부 파일 불필요 • v1.3</div>
 </div>
 
 <!-- 게임 -->
