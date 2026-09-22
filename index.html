@@ -97,7 +97,7 @@ input[type=range]{accent-color:#ffcb05}
 <div id="select-screen" class="screen">
   <div class="pokeball"></div>
   <div class="title"><span>Pokémon Rhythm Stage!</span><br>프세카풍 리듬게임</div>
-  <div class="subtitle">⚡ 5레인 낙하형 • 탭 / 홀드 / 플릭 • 오마주 9곡 + 적녹 원곡 스트리밍 2곡</div>
+  <div class="subtitle">⚡ 5레인 낙하형 • 탭 / 홀드 / 플릭 • 오마주 9곡 + 적녹 원곡 스트리밍 3곡</div>
   <div id="songList"></div>
   <div class="diff-row" id="diffRow">
     <button class="diff-btn" data-diff="EASY">EASY<span class="lv">Lv.5 ★★★★★</span></button>
@@ -128,7 +128,7 @@ input[type=range]{accent-color:#ffcb05}
     🎺 마크 곡은 원곡 스트리밍(인터넷 필요). 박자가 어긋나면 ⚙ BPM 버튼으로 조절<br>
     ※ 곡명은 실제 포켓몬 BGM을 오마주한 것으로, 멜로디는 저작권 회피를 위한 오리지널 칩튠입니다(원곡 음원 아님). 진짜 BGM으로 하고 싶으면 mp3를 직접 업로드하세요! (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">오마주 9곡 + 원곡 스트리밍 • 원곡은 URL 재생(레포 미포함) • v1.8</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">오마주 9곡 + 원곡 스트리밍 • 원곡은 URL 재생(레포 미포함) • v1.9</div>
 </div>
 
 <!-- 게임 -->
@@ -229,7 +229,10 @@ const STREAMS=[
   jacket:'linear-gradient(135deg,#facc15,#16a34a)',durSec:0},
  {id:21,emoji:'🎺',title:'3번도로 (적·녹) [원곡]',sub:'Route 3 Original • archive.org 스트리밍',bpm:140,isStream:true,
   url:'https://ia801400.us.archive.org/20/items/pkmn-rgby-soundtrack/Disc%201/27%20-%20Route%203.mp3#t=0',
-  jacket:'linear-gradient(135deg,#38bdf8,#16a34a)',durSec:0}
+  jacket:'linear-gradient(135deg,#38bdf8,#16a34a)',durSec:0},
+ {id:22,emoji:'🎺',title:'11번도로 (적·녹) [원곡]',sub:'Route 11 Original • archive.org 스트리밍',bpm:140,isStream:true,
+  url:'https://ia801400.us.archive.org/20/items/pkmn-rgby-soundtrack/Disc%201/38%20-%20Route%2011.mp3#t=0',
+  jacket:'linear-gradient(135deg,#fb923c,#16a34a)',durSec:0}
 ];
 let streamEl=null;
 function getStream(){if(!streamEl){streamEl=new Audio();streamEl.preload='auto'}return streamEl}
@@ -251,10 +254,10 @@ let selectedSong=SONGS[1];
 let selectedDiff='NORMAL';
 // 4단계 난이도: 밀도(mult), 최소 간격, 동시치기/플릭/연타 확률로 명확히 차별화
 const DIFFS={
- EASY:{mult:0.62,name:'EASY',level:5,minGap:0.24,globalGap:0.14,hold:true,flick:true,flickRate:0.08,doubleRate:0.08,streamRate:0,desc:'입문용 • 템포 업! 가끔 플릭+동시치기'},
- NORMAL:{mult:0.95,name:'NORMAL',level:8,minGap:0.13,globalGap:0.085,hold:true,flick:true,flickRate:0.14,doubleRate:0.25,streamRate:0.08,desc:'빠른 템포 • 동시치기+연타 맛보기'},
- HARD:{mult:1.15,name:'HARD',level:11,minGap:0.10,globalGap:0.06,hold:true,flick:true,flickRate:0.20,doubleRate:0.45,streamRate:0.16,desc:'고속 • 동시치기+연타 본격'},
- EXPERT:{mult:1.4,name:'EXPERT',level:15,minGap:0.07,globalGap:0.045,hold:true,flick:true,flickRate:0.24,doubleRate:0.6,streamRate:0.22,desc:'극악 • 초고속 연타+더블 점프'}
+ EASY:{mult:0.70,name:'EASY',level:5,minGap:0.24,globalGap:0.14,hold:true,flick:true,flickRate:0.10,doubleRate:0.12,streamRate:0,rush:false,rushRate:0,desc:'입문용 • 템포 업! 가끔 플릭+동시치기'},
+ NORMAL:{mult:1.05,name:'NORMAL',level:8,minGap:0.13,globalGap:0.085,hold:true,flick:true,flickRate:0.16,doubleRate:0.30,streamRate:0.10,rush:false,rushRate:0,desc:'빠른 템포 • 동시치기+연타 맛보기'},
+ HARD:{mult:1.25,name:'HARD',level:11,minGap:0.10,globalGap:0.06,hold:true,flick:true,flickRate:0.22,doubleRate:0.50,streamRate:0.18,rush:true,rushRate:0.6,desc:'고속 • 동시치기+연타+클라이막스 러시'},
+ EXPERT:{mult:1.5,name:'EXPERT',level:15,minGap:0.07,globalGap:0.045,hold:true,flick:true,flickRate:0.26,doubleRate:0.65,streamRate:0.25,rush:true,rushRate:0.9,desc:'극악 • 광속 16분 연타+더블 점프'}
 };
 function updateDiffInfo(){
  const el=document.getElementById('diffInfo');if(!el)return;
@@ -321,6 +324,13 @@ function buildChart(song,diffKey){
     push(lane,t,kind==='hold'?beat*2:0,kind);
     if(b%8===0&&D.doubleRate>=0.2)push(4-lane,t,0,'tap'); // 강박 거울 동시치기
     else if(Math.random()<D.doubleRate*0.5)push(4-lane,t,0,'tap');
+    // 클라이막스 연타: 박 후반부 16분 추가타 (타타타타!)
+    if(D.rush&&(b%16)>=12&&Math.random()<D.rushRate){
+     let rl=lane+(dir!==0?dir:(Math.random()<0.5?1:-1));
+     if(rl<0||rl>4)rl=4-lane;
+     if(rl===lane)rl=(lane+2)%5;
+     push(rl,t+beat*0.5,0,'tap');
+    }
    }
   }
  }else{
@@ -332,7 +342,7 @@ function buildChart(song,diffKey){
   const pits=song.melody.filter(m=>m>0);
   const lo=Math.min(...pits),hi=Math.max(...pits);
   const pitchLane=m=>Math.max(0,Math.min(4,Math.round((m-lo)/((hi-lo)||1)*4)));
-  let s=8,barCount=0; // 앞 4박 여유
+  let s=8,barCount=0,prevLane=2; // 앞 4박 여유
   while(s<steps-8){
    const mel=song.melody[s%loopLen];
    const time=s*stepBeat*beat;
@@ -345,16 +355,16 @@ function buildChart(song,diffKey){
     if(run>=3&&D.hold){
      push(lane,time,Math.min(4,run)*stepBeat*beat,'hold');
      if(barPos===0&&Math.random()<D.doubleRate*0.5)push(4-lane,time,0,'tap');
-     s+=run;continue;
+     prevLane=lane;s+=run;continue;
     }
     // 마디 첫박: 거울 동시치기 — 예쁜 대칭 점프
     if(barPos===0&&D.doubleRate>0&&Math.random()<D.doubleRate+0.15){
      const pair=(barCount%2===0)?[0,4]:[1,3];
      push(pair[0],time,0,'tap');push(pair[1],time,0,'tap');
-     barCount++;s++;continue;
+     barCount++;prevLane=pair[1];s++;continue;
     }
     // 프레이즈 끝 고정 홀드
-    if(D.hold&&s%32===20){push(lane,time,beat*2,'hold');s++;continue}
+    if(D.hold&&s%32===20){push(lane,time,beat*2,'hold');prevLane=lane;s++;continue}
     // 최고음+프레이즈 끝 → 플릭
     let kind='tap';const rr=Math.random();
     if(D.flickRate>0){
@@ -371,6 +381,16 @@ function buildChart(song,diffKey){
      if(barPos%8===4&&Math.random()<D.doubleRate)push((lane+2)%5,time,0,'tap');
     }
     if(diffKey==='EXPERT'&&barPos===8&&Math.random()<0.4)push((lane+1)%5,time,0,'tap');
+    // 클라이막스 연타 (HARD+): 멜로디 뒤에 붙는 16분 추가타 — 타타타타!
+    if(D.rush&&(s%64)>=48&&Math.random()<D.rushRate){
+     let rd=lane-prevLane;
+     rd=rd===0?(Math.random()<0.5?1:-1):Math.max(-1,Math.min(1,rd));
+     let rl=lane+rd;
+     if(rl<0||rl>4)rl=4-lane;
+     if(rl===lane)rl=(lane+2)%5;
+     push(rl,time+stepBeat*beat*0.5,0,(diffKey==='EXPERT'&&Math.random()<0.12)?'flick':'tap');
+    }
+    prevLane=lane;
     s++;
    }else{
     // 쉼표: 킥 박자에 베이스 노트 (리듬 뼈대)
@@ -390,8 +410,8 @@ function buildChart(song,diffKey){
   const prevLane=lastLane[n.lane];
   const gapLane=n.time-(prevLane??-9);
   const gapAny=n.time-lastAny;
-  if(prevLane!==undefined&&gapLane<0.03)continue; // 중복 제거
-  const isChord=gapAny<0.03; // 다른 레인 동시치기 유지
+ if(prevLane!==undefined&&gapLane<0.03)continue; // 중복 제거
+ const isChord=gapAny<0.03&&gapLane>=D.minGap; // 진짜 동시치기만 유지 (같은 레인 촘촘 겹침은 제거)
   if(!isChord&&(gapLane<D.minGap||gapAny<D.globalGap))continue;
   out.push(n);lastLane[n.lane]=n.time;lastAny=n.time;
  }
