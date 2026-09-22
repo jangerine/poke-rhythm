@@ -8,16 +8,20 @@
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
 프로젝트 세카이(프세카) 스타일의 **5레인 낙하형 리듬게임**입니다.
-포켓몬풍 오리지널 BGM 3곡 내장 + 내 MP3 업로드 플레이 지원. 설치 없이 브라우저에서 바로 실행됩니다.
+실제 BGM 곡명 오마주 9곡 내장 + 내 MP3 업로드 플레이 지원. 설치 없이 브라우저에서 바로 실행됩니다.
 
-> 🎮 플레이: `index.html`을 브라우저로 열거나 GitHub Pages로 배포
+## ▶️ 바로 플레이
+
+### 🎮 [https://jangerine.github.io/pokemon-rhythm-stage/](https://jangerine.github.io/pokemon-rhythm-stage/) ← 클릭하면 바로 게임 시작!
+
+📂 레포: [https://github.com/jangerine/pokemon-rhythm-stage](https://github.com/jangerine/pokemon-rhythm-stage)
 
 ---
 
 ## ✨ 주요 기능
 
 - **5레인 낙하형 라이브** (프세카식)
-- **3종 노트**: 🔵 탭 / 🟢 홀드 / 🔴 플릭 (스와이프 or 탭)
+- **3종 노트(네모 막대)**: 🟦 탭 / 🟢 홀드 / 🟥 플릭 (스와이프 or 탭)
 - **4단계 난이도** (레벨·밀도·기믹 차별화, 최소 노트 간격 보장):
 
 | 난이도 | 레벨 | 특징 |
