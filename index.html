@@ -107,7 +107,7 @@ input[type=range]{accent-color:#ffcb05}
     <b>🎮 조작법 (5레인)</b><br>
     키보드: <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd>(또는 Space) <kbd>J</kbd> <kbd>K</kbd> — 아래 판정선에 닿을 때 누르기<br>
     모바일: 레인 터치 / 플릭노트는 위로 스와이프 (그냥 탭해도 OK)<br>
-    🔵 파랑 동그라미 = 탭 &nbsp; 🟢 초록 긴바 = 홀드(끝까지 누르고 있기) &nbsp; 🔴 빨강 화살 = 플릭(쓸어올리기 or 탭)<br>
+    🟦 파랑 네모 막대 = 탭 &nbsp; 🟢 초록 긴바 = 홀드(끝까지 누르고 있기) &nbsp; 🟥 빨강 화살막대 = 플릭(쓸어올리기 or 탭)<br>
     판정: PERFECT ±45ms / GREAT ±90ms / GOOD ±130ms<br>
     ※ 내장곡은 저작권 회피를 위한 포켓몬풍 오리지널 칩튠입니다. 진짜 포켓몬 BGM으로 하고 싶으면 mp3 파일을 직접 업로드하세요! (개인 소장용)
   </div>
@@ -587,15 +587,18 @@ function draw(t,frameDt){
   ctx.fillStyle='#ffffff66';ctx.font='bold 18px sans-serif';ctx.textAlign='center';
   ctx.fillText(['S','D','F','J','K'][i],i*laneW+laneW/2,H-28);
  }
- // 판정선 + 레인 리셉터 (누르면 부드럽게 커짐)
+ // 판정선 + 레인 리셉터 (프세카식 네모 틀, 누르면 부드럽게 커짐)
  ctx.fillStyle='#ffcb05';ctx.fillRect(0,judgeY-3,W,6);
+ const recW=laneW*0.86,recH=22;
  for(let i=0;i<LANES;i++){
   const x=i*laneW+laneW/2,f=laneFlash[i]||0;
+  const rw=recW+f*22,rh=recH+f*10;
   ctx.globalAlpha=0.9;ctx.strokeStyle=f>0.35?'#ffcb05':'#ffffff55';ctx.lineWidth=2+f*2;
-  ctx.beginPath();ctx.arc(x,judgeY,22+f*11,0,7);ctx.stroke();ctx.globalAlpha=1;
+  ctx.beginPath();ctx.roundRect(x-rw/2,judgeY-rh/2,rw,rh,7);ctx.stroke();ctx.globalAlpha=1;
  }
- // 노트
+ // 노트 (프세카식 네모 막대)
  const trailLen=vpx*0.085; // 슬라이드 잔상 길이 (이동 방향 뒤쪽)
+ const noteW=laneW*0.86; // 노트 막대 너비 (레인 폭 기준)
  for(const n of notes){
   const dtn=n.time-t;
   if(dtn>scrollWin+0.15||dtn<-0.6)continue;
@@ -610,7 +613,7 @@ function draw(t,frameDt){
    const tg=ctx.createLinearGradient(0,y-trailLen-14,0,y+6);
    tg.addColorStop(0,'rgba(255,255,255,0)');tg.addColorStop(1,col+'55');
    ctx.fillStyle=tg;
-   ctx.beginPath();ctx.roundRect(x-13,y-trailLen-14,26,trailLen+20,12);ctx.fill();
+   ctx.beginPath();ctx.roundRect(x-noteW/2,y-trailLen-14,noteW,trailLen+20,10);ctx.fill();
   }
   if(n.kind==='hold'){
    if(!n.tailJudged){
@@ -618,14 +621,17 @@ function draw(t,frameDt){
     const yTail=judgeY-(tailT-t)*vpx;
     const yHead=n.holdState==='holding'?judgeY:y; // 잡은 뒤에는 헤드가 판정선에 고정
     const top=Math.min(yHead,yTail),hh=Math.abs(yHead-yTail)+30;
-    const hg=ctx.createLinearGradient(0,top,0,top+hh);
-    hg.addColorStop(0,'rgba(34,197,94,.55)');hg.addColorStop(1,n.holdState==='holding'?'#4ade80':'rgba(34,197,94,.85)');
+    const hw=noteW*0.62; // 홀드 바는 헤드보다 살짝 좁게 (프세카식)
+    const hg=ctx.createLinearGradient(x-hw/2,0,x+hw/2,0);
+    hg.addColorStop(0,'rgba(34,197,94,.5)');
+    hg.addColorStop(0.5,n.holdState==='holding'?'#4ade80':'rgba(34,197,94,.9)');
+    hg.addColorStop(1,'rgba(34,197,94,.5)');
     ctx.fillStyle=hg;
-    ctx.beginPath();ctx.roundRect(x-13,top,26,hh,13);ctx.fill();
+    ctx.beginPath();ctx.roundRect(x-hw/2,top,hw,hh,10);ctx.fill();
     ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
    }
    if(!n.judged){
-    drawTap(x,y,'#4ade80',1+0.22*Math.max(0,1-Math.abs(dtn)/0.12));
+    drawRectNote(x,y,noteW,'#4ade80',1+0.22*Math.max(0,1-Math.abs(dtn)/0.12));
    }else if(n.holdState==='holding'){
     // 홀드 중 맥동 이펙트
     ctx.globalAlpha=fade*0.45;ctx.fillStyle='#4ade80';
@@ -634,13 +640,15 @@ function draw(t,frameDt){
   }else if(n.kind==='flick'){
    if(!n.judged){
     const pop=1+0.25*Math.max(0,1-Math.abs(dtn)/0.12); // 판정선 접근 시 살짝 커짐
-    const s=30*pop;
-    ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI/4);
-    ctx.fillStyle='#f43f5e';ctx.strokeStyle='#fff';ctx.lineWidth=3;
-    ctx.beginPath();ctx.roundRect(-s/2,-s/2,s,s,8);ctx.fill();ctx.stroke();ctx.restore();
-    // 위로 미끄러지듯 통통 튀는 화살
-    const bob=Math.sin(now/130)*4-4;
-    ctx.fillStyle='#fff';ctx.font='bold 20px sans-serif';ctx.textAlign='center';ctx.fillText('⬆',x,y+7+bob);
+    drawRectNote(x,y,noteW,'#f43f5e',pop);
+    // 위로 미끄러지듯 통통 튀는 쉐브론 (플릭 방향 표시)
+    const bob=Math.sin(now/130)*3;
+    ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.lineCap='round';
+    for(let k=0;k<2;k++){
+     const cy=y-18-k*11+bob;
+     ctx.beginPath();ctx.moveTo(x-11,cy);ctx.lineTo(x,cy-8);ctx.lineTo(x+11,cy);ctx.stroke();
+    }
+    ctx.lineCap='butt';
     if(Math.abs(dtn)<0.25){ctx.globalAlpha=fade*(1-Math.abs(dtn)/0.25);ctx.strokeStyle='#f43f5e';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,26+(0.25-Math.abs(dtn))*120,0,7);ctx.stroke();ctx.globalAlpha=fade}
    }
   }else{
@@ -648,7 +656,7 @@ function draw(t,frameDt){
     const pop=1+0.22*Math.max(0,1-Math.abs(dtn)/0.12);
     // 접근 링: 다가올수록 판정선으로 스며듦
     if(dtn>0&&dtn<0.6){ctx.globalAlpha=fade*(0.6-dtn)/0.6*0.7;ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,24+dtn*70,0,7);ctx.stroke();ctx.globalAlpha=fade}
-    drawTap(x,y,'#38bdf8',pop);
+    drawRectNote(x,y,noteW,'#38bdf8',pop);
    }
   }
   ctx.globalAlpha=1;
@@ -668,13 +676,20 @@ function draw(t,frameDt){
  ctx.fillStyle='#ffffffaa';ctx.font='12px sans-serif';ctx.textAlign='left';
  ctx.fillText(`${selectedSong.title} [${selectedDiff} Lv.${DIFFS[selectedDiff].level}]  BPM ${selectedSong.bpm}`,10,20);
 }
-function drawTap(x,y,color,scale){
+/* 프세카식 네모 막대 노트: 레인 폭 기준 둥근 막대 + 흰 테두리 + 하이라이트 */
+function drawRectNote(x,y,w,color,scale){
  const s=scale||1;
- ctx.fillStyle='#0b1026';ctx.beginPath();ctx.arc(x,y,24*s,0,7);ctx.fill();
- ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,21*s,0,7);ctx.fill();
- ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,15*s,0,7);ctx.fill();
- ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,8*s,0,7);ctx.fill();
- ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,21*s,0,7);ctx.stroke();
+ const bw=w,bh=22*s;
+ ctx.fillStyle='#0b1026';
+ ctx.beginPath();ctx.roundRect(x-bw/2-3,y-bh/2-3,bw+6,bh+6,9);ctx.fill();
+ const ng=ctx.createLinearGradient(0,y-bh/2,0,y+bh/2);
+ ng.addColorStop(0,'#ffffff');ng.addColorStop(0.32,color);ng.addColorStop(1,color);
+ ctx.fillStyle=ng;
+ ctx.beginPath();ctx.roundRect(x-bw/2,y-bh/2,bw,bh,8);ctx.fill();
+ ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();
+ // 중앙 코어 라인
+ ctx.fillStyle='rgba(255,255,255,.4)';
+ ctx.fillRect(x-bw/2+7,y-1.5,bw-14,3);
 }
 
 /* ============ 커스텀 MP3 ============ */
