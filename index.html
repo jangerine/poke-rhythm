@@ -37,6 +37,8 @@ body{font-family:'Pretendard','Malgun Gothic',sans-serif;background:#0b1026;colo
 .diff-btn[data-diff="NORMAL"].active{background:#60a5fa}
 .diff-btn[data-diff="HARD"].active{background:#fb923c}
 .diff-btn[data-diff="EXPERT"].active{background:#f43f5e;color:#fff}
+.diff-btn .lv{display:block;font-size:11px;font-weight:700;opacity:.75}
+#diffInfo{margin-top:6px;font-size:13px;color:#ffcb05;font-weight:700;min-height:20px;text-align:center}
 /* 버튼 */
 .btn{padding:14px 36px;font-size:18px;font-weight:900;border:none;border-radius:16px;cursor:pointer;transition:.15s}
 .btn-play{background:linear-gradient(90deg,#ffcb05,#ff8a00);color:#3b2500;box-shadow:0 8px 30px #ff8a0055}
@@ -82,13 +84,14 @@ input[type=range]{accent-color:#ffcb05}
   <div class="subtitle">⚡ 5레인 낙하형 • 탭 / 홀드 / 플릭 • 포켓몬풍 오리지널 BGM 3곡 내장</div>
   <div id="songList"></div>
   <div class="diff-row" id="diffRow">
-    <button class="diff-btn" data-diff="EASY">EASY</button>
-    <button class="diff-btn active" data-diff="NORMAL">NORMAL</button>
-    <button class="diff-btn" data-diff="HARD">HARD</button>
-    <button class="diff-btn" data-diff="EXPERT">EXPERT</button>
+    <button class="diff-btn" data-diff="EASY">EASY<span class="lv">Lv.3 ★★★</span></button>
+    <button class="diff-btn active" data-diff="NORMAL">NORMAL<span class="lv">Lv.6 ★★★★★★</span></button>
+    <button class="diff-btn" data-diff="HARD">HARD<span class="lv">Lv.9 ★★★★★★★★★</span></button>
+    <button class="diff-btn" data-diff="EXPERT">EXPERT<span class="lv">Lv.13 ★×13</span></button>
   </div>
+  <div id="diffInfo"></div>
   <div class="row">
-    <label class="opt">노트 속도 <input id="speed" type="range" min="2" max="10" step="0.5" value="5"> <b id="speedVal">5.0</b></label>
+    <label class="opt">슬라이드 속도 <input id="speed" type="range" min="2" max="10" step="0.5" value="5"> <b id="speedVal">5.0</b></label>
     <label class="opt">볼륨 <input id="vol" type="range" min="0" max="100" value="80"></label>
     <label class="opt"><input id="auto" type="checkbox"> 오토플레이(감상)</label>
   </div>
@@ -180,7 +183,18 @@ const SONGS=[
 let customSong=null; // mp3 업로드 시
 let selectedSong=SONGS[1];
 let selectedDiff='NORMAL';
-const DIFFS={EASY:{mult:0.45,name:'EASY'},NORMAL:{mult:0.65,name:'NORMAL'},HARD:{mult:0.9,name:'HARD'},EXPERT:{mult:1.15,name:'EXPERT'}};
+// 4단계 난이도: 밀도(mult), 최소 간격, 동시치기/플릭/연타 여부로 명확히 차별화
+const DIFFS={
+ EASY:{mult:0.34,name:'EASY',level:3,minGap:0.34,globalGap:0.20,hold:true,flick:false,flickRate:0,double:false,stream:false,desc:'첫 플레이 추천 • 탭+홀드만, 여유로운 간격'},
+ NORMAL:{mult:0.58,name:'NORMAL',level:6,minGap:0.22,globalGap:0.13,hold:true,flick:true,flickRate:0.06,double:false,stream:false,desc:'플릭 입문 • 적당한 밀도'},
+ HARD:{mult:0.82,name:'HARD',level:9,minGap:0.15,globalGap:0.09,hold:true,flick:true,flickRate:0.12,double:true,stream:false,desc:'동시치기 등장 • 손이 바빠져요'},
+ EXPERT:{mult:1.05,name:'EXPERT',level:13,minGap:0.10,globalGap:0.06,hold:true,flick:true,flickRate:0.16,double:true,stream:true,desc:'풀콤보 도전 • 고속 연타+동시치기'}
+};
+function updateDiffInfo(){
+ const el=document.getElementById('diffInfo');if(!el)return;
+ const d=DIFFS[selectedDiff];
+ el.textContent=`⭐ Lv.${d.level} ${selectedDiff} — ${d.desc} (${selectedSong.bpm}BPM)`;
+}
 
 // 송 리스트 UI
 const songListEl=document.getElementById('songList');
@@ -190,11 +204,11 @@ function renderSongs(){
  all.forEach(s=>{
   const d=document.createElement('div');d.className='song-card'+(selectedSong.id===s.id?' selected':'');
   d.innerHTML=`<div class="song-jacket" style="background:${s.jacket}">${s.emoji}</div><div class="song-title">${s.title}</div><div class="song-meta">${s.sub}</div><span class="song-bpm">♫ ${s.bpm} BPM • ${s.durSec?s.durSec+'s':'LIVE'}</span>`;
-  d.onclick=()=>{selectedSong=s;renderSongs()};songListEl.appendChild(d);
+  d.onclick=()=>{selectedSong=s;renderSongs();updateDiffInfo()};songListEl.appendChild(d);
  });
 }
-renderSongs();
-document.querySelectorAll('.diff-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.diff-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedDiff=b.dataset.diff});
+renderSongs();updateDiffInfo();
+document.querySelectorAll('.diff-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.diff-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedDiff=b.dataset.diff;updateDiffInfo()});
 document.getElementById('speed').oninput=e=>document.getElementById('speedVal').textContent=(+e.target.value).toFixed(1);
 document.getElementById('howBtn').onclick=()=>document.getElementById('howBox').classList.toggle('hidden');
 let customBpm=150;
@@ -216,61 +230,66 @@ function hitSE(ok){const ac=audio();const o=ac.createOscillator(),g=ac.createGai
 
 /* ============ 채보 생성 ============ */
 function buildChart(song,diffKey){
- const diff=DIFFS[diffKey];const beat=60/song.bpm;const notes=[];
+ const D=DIFFS[diffKey];const beat=60/song.bpm;const notes=[];
+ const push=(lane,time,dur,kind)=>notes.push({lane,time,dur:dur||0,kind,judged:false,holdState:kind==='hold'?'wait':null,tailJudged:false});
  if(song.isCustom){
-  // 커스텀 mp3: BPM 기준으로 랜덤 생성
+  // 커스텀 mp3: BPM 기준으로 랜덤 생성 (난이도별 밀도/기믹 차별화)
   const totalBeats=Math.floor(song.durSec/beat);
-  let lane=Math.floor(Math.random()*5);
+  let lane=2;
   for(let b=4;b<totalBeats-4;b++){
-   const r=Math.random();
-   const density=diff.mult*0.75;
-   if(r>1-density){
+   if(Math.random()<D.mult*0.75){
     lane=Math.max(0,Math.min(4,lane+[-2,-1,-1,1,1,2][Math.floor(Math.random()*6)]));
-    const t=b*beat;
-    const kind=Math.random()<0.12?'hold':(Math.random()<0.15?'flick':'tap');
-    notes.push({lane,time:t,dur:kind==='hold'?beat*2:0,kind,judged:false,holdState:kind==='hold'?'wait':null,tailJudged:false});
-    if(diffKey==='EXPERT'&&Math.random()<0.12){let l2=(lane+2)%5;notes.push({lane:l2,time:t,dur:0,kind:'tap',judged:false})}
+    const t=b*beat;const r=Math.random();
+    let kind='tap';
+    if(D.hold&&r<0.12)kind='hold';
+    else if(D.flick&&r<0.12+D.flickRate)kind='flick';
+    push(lane,t,kind==='hold'?beat*2:0,kind);
+    if(D.double&&Math.random()<0.12)push((lane+2)%5,t,0,'tap');
    }
   }
-  return notes;
- }
- // 내장곡: 멜로디 기반 (멜로디 1음 = 0.5박 가정, 8박 패턴 반복)
- const loopLen=song.melody.length; // 32
- const stepBeat=0.5;
- const totalDur=72; // 약 70초 라이브
- const totalSteps=Math.floor(totalDur/stepBeat/ (60/song.bpm) *1); // step 수
- // 실제로 beats로 계산
- const steps=Math.floor(totalDur/(beat*stepBeat));
- let laneSeed=2;
- for(let s=8;s<steps-8;s++){ // 앞 4박 여유
-  const mel=song.melody[s%loopLen];
-  const time=s*stepBeat*beat;
-  const barPos=s%16;
-  const isMelody=mel>0;
-  // 밀도 조절
-  let p=diff.mult*(isMelody?0.85:0.25);
-  if(barPos%4===0)p=Math.min(1,p+0.25); // 강박 보정
-  if(diffKey==='EASY'&&barPos%2===1)p*=0.3;
-  if(Math.random()<p||(isMelody&&barPos%4===0&&diffKey!=='EASY')){
-   laneSeed=isMelody?(mel%5):Math.floor(Math.random()*5);
-   // 가끔 점프
-   let kind='tap';
-   const rr=Math.random();
-   if(s%32===24&&diffKey!=='EASY')kind='hold';
-   else if((barPos===12||barPos===14)&&diffKey!=='EASY'&&rr<0.3)kind='flick';
-   else if(rr<0.06&&diffKey!=='EASY')kind='flick';
-   const dur=kind==='hold'?beat*2:0;
-   notes.push({lane:laneSeed,time,dur,kind,judged:false,holdState:kind==='hold'?'wait':null,tailJudged:false});
-   if((diffKey==='HARD'||diffKey==='EXPERT')&&barPos%8===4&&Math.random()<0.35){
-    notes.push({lane:(laneSeed+2)%5,time,dur:0,kind:'tap',judged:false});
-   }
-   if(diffKey==='EXPERT'&&barPos===0&&Math.random()<0.5){
-    notes.push({lane:(laneSeed+3)%5,time,dur:0,kind:Math.random()<0.3?'flick':'tap',judged:false});
+ }else{
+  // 내장곡: 멜로디 기반 (멜로디 1음 = 0.5박, 32스텝 패턴 반복)
+  const loopLen=song.melody.length; // 32
+  const stepBeat=0.5;
+  const totalDur=72; // 약 70초 라이브
+  const steps=Math.floor(totalDur/(beat*stepBeat));
+  let laneSeed=2;
+  for(let s=8;s<steps-8;s++){ // 앞 4박 여유
+   const mel=song.melody[s%loopLen];
+   const time=s*stepBeat*beat;
+   const barPos=s%16;
+   const isMelody=mel>0;
+   // 밀도 조절
+   let p=D.mult*(isMelody?0.85:0.22);
+   if(barPos%4===0)p=Math.min(1,p+0.22); // 강박 보정
+   if(diffKey==='EASY'&&barPos%2===1)p*=0.25;
+   if(D.stream&&!isMelody&&barPos%2===1&&Math.random()<0.18)p=Math.max(p,0.5); // EXPERT 16분 스트림
+   if(Math.random()<p||(isMelody&&barPos%4===0&&diffKey!=='EASY')){
+    laneSeed=isMelody?(mel%5):Math.floor(Math.random()*5);
+    let kind='tap';
+    const rr=Math.random();
+    if(D.hold&&s%32===24)kind='hold';
+    else if(D.flick&&((barPos===12||barPos===14)&&rr<0.3||rr<D.flickRate))kind='flick';
+    push(laneSeed,time,kind==='hold'?beat*2:0,kind);
+    if(D.double&&barPos%8===4&&Math.random()<0.35){
+     push((laneSeed+2)%5,time,0,'tap');
+    }
+    if(diffKey==='EXPERT'&&barPos===0&&Math.random()<0.5){
+     push((laneSeed+3)%5,time,0,Math.random()<0.3?'flick':'tap');
+    }
    }
   }
  }
  notes.sort((a,b)=>a.time-b.time);
- return notes;
+ // 최소 간격 필터: 같은 레인 minGap, 전체 globalGap 미만 노트 제거 (동시치기는 유지)
+ const out=[];const lastLane={};let lastAny=-9;
+ for(const n of notes){
+  const gapLane=n.time-(lastLane[n.lane]??-9);
+  const gapAny=n.time-lastAny;
+  if(gapAny>=0.03&&(gapLane<D.minGap||gapAny<D.globalGap))continue;
+  out.push(n);lastLane[n.lane]=n.time;lastAny=n.time;
+ }
+ return out;
 }
 
 /* 음악 스케줄링 (내장곡) */
@@ -297,12 +316,24 @@ function scheduleSong(song,startAt){
 
 /* ============ 게임 상태 ============ */
 const cv=document.getElementById('game'),ctx=cv.getContext('2d');
+// 고해상도 대응: CSS 픽셀 기준으로 렌더링 (화면이 커도 끊김 없이 미끄러지듯 이동)
+function fitCanvas(){
+ const DPR=Math.min(2,window.devicePixelRatio||1);
+ const r=cv.getBoundingClientRect();
+ const w=Math.max(280,r.width||560),h=Math.max(400,r.height||620);
+ cv.width=Math.round(w*DPR);cv.height=Math.round(h*DPR);
+ ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+addEventListener('resize',()=>{if(!document.getElementById('game-screen').classList.contains('hidden'))fitCanvas()});
 const LANES=5,KEYS=['s','d','f','j','k'];
-let notes=[],songStart=0,songPlaying=false,raf=0;
+let notes=[],songStart=0,songPlaying=false,raf=0,lastFrameT=0;
 let score=0,combo=0,maxCombo=0,life=100,counts={perfect:0,great:0,good:0,miss:0};
 let speed=5,autoPlay=false,isCustomPlaying=false,customBuffer=null,customSource=null;
 let laneFlash=[0,0,0,0,0],effects=[],paused=false,pauseTime=0;
 let judgeEl=document.getElementById('judgePopup');
+// 등속 슬라이드: 속도 설정 → 초당 픽셀(px/sec)로 고정. 프세카처럼 항상 같은 속도로 내려옴
+function pxPerSec(){return 180+speed*70} // 속도 2→320, 5→530, 10→880 px/s
+function scrollSecFor(){const H=Math.max(400,Math.min(760,window.innerHeight-150));return (H-110)/pxPerSec()}
 
 document.getElementById('speed').oninput=e=>{speed=+e.target.value;document.getElementById('speedVal').textContent=speed.toFixed(1)};
 document.getElementById('auto').onchange=e=>autoPlay=e.target.checked;
@@ -317,6 +348,7 @@ function startGame(){
  effects=[];paused=false;
  speed=+document.getElementById('speed').value;
  showScreen('game-screen');
+ fitCanvas(); // 게임 화면이 보이는 상태에서 해상도 확정
  // 카운트다운 3,2,1
  const cd=document.getElementById('countdown');cd.classList.remove('hidden');
  let c=3;cd.textContent=c;
@@ -325,7 +357,8 @@ function startGame(){
 function beginSong(song){
  const ac=audio();
  const delay=0.15;
- songStart=ac.currentTime+delay+1.2; // 시작 여유 (노트가 내려오는 시간)
+ const lead=Math.max(1.2,scrollSecFor()+0.4); // 첫 노트가 화면 위에 미리 보여야 자연스럽게 미끄러짐
+ songStart=ac.currentTime+delay+lead;
  if(song.isCustom&&customBuffer){
   customSource=ac.createBufferSource();customSource.buffer=customBuffer;customSource.connect(master);
   customSource.start(songStart);
@@ -334,7 +367,7 @@ function beginSong(song){
   scheduleSong(song,songStart);
   song.endTime=songStart+74;
  }
- songPlaying=true;
+ songPlaying=true;lastFrameT=0;
  cancelAnimationFrame(raf);loop();
 }
 function songTime(){return audio().currentTime-songStart}
@@ -347,7 +380,7 @@ function showResult(){
  showScreen('result-screen');
  const total=notes.length||1;
  const acc=(counts.perfect+counts.great*0.7+counts.good*0.3)/total*100;
- document.getElementById('resultTitle').textContent=`${selectedSong.title} [${selectedDiff}]`;
+ document.getElementById('resultTitle').textContent=`${selectedSong.title} [${selectedDiff} Lv.${DIFFS[selectedDiff].level}]`;
  document.getElementById('finalScore').textContent=Math.floor(score).toLocaleString();
  document.getElementById('cPerfect').textContent=counts.perfect;
  document.getElementById('cGreat').textContent=counts.great;
@@ -476,13 +509,15 @@ function popup(j){
  clearTimeout(popup._t);judgeEl.style.opacity=1;
  popup._t=setTimeout(()=>judgeEl.style.opacity=0.25,180);
 }
-// 스코어 계산을 만점 기준으로 정규화하기 위해 hit마다 재계산
-const _origApply=applyJudge;
+/* 등속 슬라이드 렌더: y = 판정선 - 남은시간×초당픽셀. 항상 같은 속도로 미끄러지듯 내려옴 */
 
 /* ============ 루프 & 렌더 ============ */
 function loop(){
  if(!songPlaying)return;
  if(paused){raf=requestAnimationFrame(loop);return}
+ const nowMs=performance.now();
+ const frameDt=Math.min(0.05,lastFrameT?(nowMs-lastFrameT)/1000:0.016); // 프레임 독립 감쇠용 (60/120Hz 동일)
+ lastFrameT=nowMs;
  const t=songTime();
  // 오토플레이
  if(autoPlay){
@@ -504,7 +539,7 @@ function loop(){
  // 종료 체크
  const lastT=notes.length?notes[notes.length-1].time+(notes[notes.length-1].dur||0):0;
  if(t>lastT+2){endSong();return}
- draw(t);
+ draw(t,frameDt);
  // HUD
  document.getElementById('scoreText').textContent=Math.floor(score).toLocaleString();
  document.getElementById('comboText').textContent=combo+' COMBO';
@@ -529,68 +564,96 @@ applyJudge=function(j){
 };
 function applyJudgeAuto(n){applyJudgeSimple('perfect');laneFlash[n.lane]=1}
 
-function draw(t){
- const W=cv.width,H=cv.height;
+function draw(t,frameDt){
+ const W=cv.clientWidth||560,H=cv.clientHeight||700;
+ const dtF=frameDt||0.016;
  ctx.clearRect(0,0,W,H);
  // 배경 그라데이션
  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1e1b4b');g.addColorStop(1,'#0f0a2e');
  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
  const laneW=W/LANES;
  const judgeY=H-110;
+ const vpx=pxPerSec(); // 등속: 항상 같은 px/s로 미끄러짐
+ const scrollWin=judgeY/vpx; // 노트가 화면에 보이는 시간(초)
+ const now=performance.now();
  // 레인
  for(let i=0;i<LANES;i++){
   ctx.fillStyle=i%2?'#ffffff08':'#ffffff03';
   ctx.fillRect(i*laneW,0,laneW,H);
-  ctx.strokeStyle='#ffffff22';ctx.strokeRect(i*laneW+0.5,0,laneW-1,H);
-  // 플래시
-  if(laneFlash[i]>0){ctx.fillStyle=`rgba(255,203,5,${laneFlash[i]*0.35})`;ctx.fillRect(i*laneW,0,laneW,H);laneFlash[i]-=0.06}
+  ctx.strokeStyle='#ffffff22';ctx.lineWidth=1;ctx.strokeRect(i*laneW+0.5,0,laneW-1,H);
+  // 플래시 (프레임 독립 감쇠 → 60/120Hz 동일)
+  if(laneFlash[i]>0){ctx.fillStyle=`rgba(255,203,5,${laneFlash[i]*0.35})`;ctx.fillRect(i*laneW,0,laneW,H);laneFlash[i]=Math.max(0,laneFlash[i]-dtF*5)}
   // 키 라벨
   ctx.fillStyle='#ffffff66';ctx.font='bold 18px sans-serif';ctx.textAlign='center';
   ctx.fillText(['S','D','F','J','K'][i],i*laneW+laneW/2,H-28);
  }
- // 비트 라인
- const song=selectedSong;const beat=60/song.bpm;
- const scrollSec=4.5/speed+0.8; // 화면에 보이는 시간
- // 판정선
+ // 판정선 + 레인 리셉터 (누르면 부드럽게 커짐)
  ctx.fillStyle='#ffcb05';ctx.fillRect(0,judgeY-3,W,6);
- ctx.fillStyle='#ffffff';ctx.beginPath();ctx.ellipse(W/2,judgeY,70,10,0,0,7);ctx.fill();
- ctx.fillStyle='#111';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('JUDGE',W/2,judgeY+4);
+ for(let i=0;i<LANES;i++){
+  const x=i*laneW+laneW/2,f=laneFlash[i]||0;
+  ctx.globalAlpha=0.9;ctx.strokeStyle=f>0.35?'#ffcb05':'#ffffff55';ctx.lineWidth=2+f*2;
+  ctx.beginPath();ctx.arc(x,judgeY,22+f*11,0,7);ctx.stroke();ctx.globalAlpha=1;
+ }
  // 노트
+ const trailLen=vpx*0.085; // 슬라이드 잔상 길이 (이동 방향 뒤쪽)
  for(const n of notes){
-  const dt=n.time-t;
-  if(dt>scrollSec||dt<-0.5)continue;
+  const dtn=n.time-t;
+  if(dtn>scrollWin+0.15||dtn<-0.6)continue;
   const x=n.lane*laneW+laneW/2;
-  const y=judgeY-(dt/scrollSec)*(judgeY-20);
+  const y=judgeY-dtn*vpx;
+  const fade=Math.max(0,Math.min(1,(scrollWin+0.1-dtn)/0.3)); // 상단에서 페이드인 (뚝 나타나지 않음)
+  ctx.globalAlpha=fade;
+  const col=n.kind==='hold'?'#4ade80':n.kind==='flick'?'#f43f5e':'#38bdf8';
+  // 잔상: 진행 방향 뒤(위쪽)로 그라데이션 트레일 → 미끄러지는 느낌
+  const showTrail=n.kind==='hold'?(n.holdState==='holding'||!n.judged):!n.judged;
+  if(showTrail&&y>-20&&y<H+40){
+   const tg=ctx.createLinearGradient(0,y-trailLen-14,0,y+6);
+   tg.addColorStop(0,'rgba(255,255,255,0)');tg.addColorStop(1,col+'55');
+   ctx.fillStyle=tg;
+   ctx.beginPath();ctx.roundRect(x-13,y-trailLen-14,26,trailLen+20,12);ctx.fill();
+  }
   if(n.kind==='hold'){
-   const tailT=n.time+n.dur;const dtTail=tailT-t;
-   const yTail=judgeY-(dtTail/scrollSec)*(judgeY-20);
    if(!n.tailJudged){
-    ctx.fillStyle=n.holdState==='holding'?'#4ade80':'#22c55e88';
-    const w=26;
-    ctx.beginPath();ctx.roundRect(x-w/2,Math.min(y,yTail),w,Math.abs(y-yTail)+30,13);ctx.fill();
+    const tailT=n.time+n.dur;
+    const yTail=judgeY-(tailT-t)*vpx;
+    const yHead=n.holdState==='holding'?judgeY:y; // 잡은 뒤에는 헤드가 판정선에 고정
+    const top=Math.min(yHead,yTail),hh=Math.abs(yHead-yTail)+30;
+    const hg=ctx.createLinearGradient(0,top,0,top+hh);
+    hg.addColorStop(0,'rgba(34,197,94,.55)');hg.addColorStop(1,n.holdState==='holding'?'#4ade80':'rgba(34,197,94,.85)');
+    ctx.fillStyle=hg;
+    ctx.beginPath();ctx.roundRect(x-13,top,26,hh,13);ctx.fill();
     ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
    }
    if(!n.judged){
-    drawTap(x,y,'#4ade80','HOLD');
+    drawTap(x,y,'#4ade80',1+0.22*Math.max(0,1-Math.abs(dtn)/0.12));
    }else if(n.holdState==='holding'){
-    // 홀드 중 이펙트
-    ctx.fillStyle='#4ade80';ctx.beginPath();ctx.arc(x,judgeY,30+Math.sin(performance.now()/100)*4,0,7);ctx.globalAlpha=0.4;ctx.fill();ctx.globalAlpha=1;
+    // 홀드 중 맥동 이펙트
+    ctx.globalAlpha=fade*0.45;ctx.fillStyle='#4ade80';
+    ctx.beginPath();ctx.arc(x,judgeY,28+Math.sin(now/100)*4,0,7);ctx.fill();ctx.globalAlpha=fade;
    }
   }else if(n.kind==='flick'){
-   if(n.judged)continue;
-   // 빨강 다이아 + 화살
-   ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI/4);
-   ctx.fillStyle='#f43f5e';ctx.strokeStyle='#fff';ctx.lineWidth=3;
-   const s=30;ctx.beginPath();ctx.roundRect(-s/2,-s/2,s,s,8);ctx.fill();ctx.stroke();ctx.restore();
-   ctx.fillStyle='#fff';ctx.font='bold 20px sans-serif';ctx.textAlign='center';ctx.fillText('⬆',x,y+7);
-   if(Math.abs(dt)<0.1){ctx.strokeStyle=`rgba(244,63,94,${1-Math.abs(dt)*5})`;ctx.lineWidth=4;ctx.beginPath();ctx.arc(x,y,34,0,7);ctx.stroke()}
+   if(!n.judged){
+    const pop=1+0.25*Math.max(0,1-Math.abs(dtn)/0.12); // 판정선 접근 시 살짝 커짐
+    const s=30*pop;
+    ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI/4);
+    ctx.fillStyle='#f43f5e';ctx.strokeStyle='#fff';ctx.lineWidth=3;
+    ctx.beginPath();ctx.roundRect(-s/2,-s/2,s,s,8);ctx.fill();ctx.stroke();ctx.restore();
+    // 위로 미끄러지듯 통통 튀는 화살
+    const bob=Math.sin(now/130)*4-4;
+    ctx.fillStyle='#fff';ctx.font='bold 20px sans-serif';ctx.textAlign='center';ctx.fillText('⬆',x,y+7+bob);
+    if(Math.abs(dtn)<0.25){ctx.globalAlpha=fade*(1-Math.abs(dtn)/0.25);ctx.strokeStyle='#f43f5e';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,26+(0.25-Math.abs(dtn))*120,0,7);ctx.stroke();ctx.globalAlpha=fade}
+   }
   }else{
-   if(n.judged)continue;
-   drawTap(x,y,'#38bdf8','');
+   if(!n.judged){
+    const pop=1+0.22*Math.max(0,1-Math.abs(dtn)/0.12);
+    // 접근 링: 다가올수록 판정선으로 스며듦
+    if(dtn>0&&dtn<0.6){ctx.globalAlpha=fade*(0.6-dtn)/0.6*0.7;ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,24+dtn*70,0,7);ctx.stroke();ctx.globalAlpha=fade}
+    drawTap(x,y,'#38bdf8',pop);
+   }
   }
+  ctx.globalAlpha=1;
  }
- // 이펙트
- const now=performance.now();
+ // 히트 이펙트
  effects=effects.filter(e=>now-e.time<300);
  for(const e of effects){
   const p=(now-e.time)/300;const x=e.lane*laneW+laneW/2;
@@ -603,14 +666,15 @@ function draw(t){
  ctx.fillStyle='#ffcb05';ctx.fillRect(0,0,W*Math.max(0,Math.min(1,t/lastT)),6);
  // 곡명
  ctx.fillStyle='#ffffffaa';ctx.font='12px sans-serif';ctx.textAlign='left';
- ctx.fillText(`${selectedSong.title} [${selectedDiff}]  BPM ${selectedSong.bpm}`,10,20);
+ ctx.fillText(`${selectedSong.title} [${selectedDiff} Lv.${DIFFS[selectedDiff].level}]  BPM ${selectedSong.bpm}`,10,20);
 }
-function drawTap(x,y,color,label){
- ctx.fillStyle='#0b1026';ctx.beginPath();ctx.arc(x,y,24,0,7);ctx.fill();
- ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,21,0,7);ctx.fill();
- ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,15,0,7);ctx.fill();
- ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,8,0,7);ctx.fill();
- ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,21,0,7);ctx.stroke();
+function drawTap(x,y,color,scale){
+ const s=scale||1;
+ ctx.fillStyle='#0b1026';ctx.beginPath();ctx.arc(x,y,24*s,0,7);ctx.fill();
+ ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,21*s,0,7);ctx.fill();
+ ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,15*s,0,7);ctx.fill();
+ ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,8*s,0,7);ctx.fill();
+ ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,21*s,0,7);ctx.stroke();
 }
 
 /* ============ 커스텀 MP3 ============ */
