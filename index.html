@@ -64,7 +64,7 @@ label.opt{font-size:13px;color:#cbd5e1;display:flex;align-items:center;gap:8px;b
 #comboText{font-weight:900;color:#ffcb05}
 #gameWrap{position:relative;width:100%;flex:1;display:flex;justify-content:center}
 canvas#game{width:100%;height:calc(100vh - 132px);height:calc(100dvh - 132px);background:rgba(0,0,0,.35);border-top:2px solid #ffffff22;border-bottom:2px solid #ffffff22;touch-action:none;display:block}
-#judgePopup{position:absolute;top:62%;left:50%;transform:translateX(-50%);font-weight:900;font-size:28px;pointer-events:none;text-shadow:0 2px 12px #000}
+ #judgePopup{position:absolute;top:62%;left:50%;transform:translateX(-50%);font-weight:900;font-size:30px;pointer-events:none;text-shadow:0 2px 12px #000,0 0 24px rgba(255,255,255,.25);will-change:transform;white-space:nowrap}
 #countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:90px;font-weight:900;text-shadow:0 4px 30px #000}
 /* 판정 색 */
 .j-perfect{color:#ffd700}.j-great{color:#4ade80}.j-good{color:#60a5fa}.j-miss{color:#f43f5e}
@@ -90,7 +90,7 @@ input[type=range]{accent-color:#ffcb05}
 <div id="select-screen" class="screen">
   <div class="pokeball"></div>
   <div class="title"><span>Pokémon Rhythm Stage!</span><br>프세카풍 리듬게임</div>
-  <div class="subtitle">⚡ 5레인 낙하형 • 탭 / 홀드 / 플릭 • 실제 BGM 곡명 오마주 9곡 내장</div>
+  <div class="subtitle">⚡ 5레인 낙하형 • 탭 / 홀드 / 플릭 • 오마주 9곡 + 적녹 원곡 스트리밍</div>
   <div id="songList"></div>
   <div class="diff-row" id="diffRow">
     <button class="diff-btn" data-diff="EASY">EASY<span class="lv">Lv.4 ★★★★</span></button>
@@ -115,12 +115,13 @@ input[type=range]{accent-color:#ffcb05}
   <div class="help hidden" id="howBox">
     <b>🎮 조작법 (5레인)</b><br>
     키보드: <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd>(또는 Space) <kbd>J</kbd> <kbd>K</kbd> — 아래 판정선에 닿을 때 누르기<br>
-    모바일: 레인 터치 / 플릭노트는 위로 스와이프 (그냥 탭해도 OK)<br>
-    🟦 파랑 네모 막대 = 탭 &nbsp; 🟢 초록 긴바 = 홀드(끝까지 누르고 있기) &nbsp; 🟥 빨강 화살막대 = 플릭(쓸어올리기 or 탭)<br>
+    모바일: 레인 터치 / 플릭노트는 위로 쓸어올리기 필수<br>
+    🟦 파랑 네모 막대 = 탭 &nbsp; 🟢 초록 긴바 = 홀드(끝까지 누르고 있기) &nbsp; 🟥 빨강 화살막대 = 플릭 — 모바일은 위로 쓸어올리기, 키보드는 짧게 끊어치듯 눌렀다 떼기 (그냥 누르기만 하면 MISS!)<br>
     판정: PERFECT ±45ms / GREAT ±90ms / GOOD ±130ms<br>
+    🎺 마크 곡은 원곡 스트리밍(인터넷 필요). 박자가 어긋나면 ⚙ BPM 버튼으로 조절<br>
     ※ 곡명은 실제 포켓몬 BGM을 오마주한 것으로, 멜로디는 저작권 회피를 위한 오리지널 칩튠입니다(원곡 음원 아님). 진짜 BGM으로 하고 싶으면 mp3를 직접 업로드하세요! (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">실제 BGM 곡명 오마주 9곡 • 멜로디는 오리지널 합성 • 외부 파일 불필요 • v1.3</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">오마주 9곡 + 원곡 스트리밍 • 원곡은 URL 재생(레포 미포함) • v1.6</div>
 </div>
 
 <!-- 게임 -->
@@ -214,6 +215,27 @@ const SONGS=[
   melody:[72,76,79,76,81,79,76,74, 72,76,79,81,79,76,74,76, 77,81,84,81,79,81,77,76, 74,76,79,76,72,0,67,0],
   bassRoot:[36,33,29,31],jacket:'linear-gradient(135deg,#f472b6,#fbbf24)'}
 ];
+// 원곡 스트리밍 곡: 파일은 레포에 넣지 않고 URL에서 바로 재생 (깃허브엔 링크만 들어감)
+const STREAMS=[
+ {id:20,emoji:'🎺',title:'1번도로 (적·녹) [원곡]',sub:'Route 1 Original • archive.org 스트리밍',bpm:140,isStream:true,
+  url:'https://ia601400.us.archive.org/20/items/pkmn-rgby-soundtrack/Disc%201/11%20-%20Route%201.mp3#t=0',
+  jacket:'linear-gradient(135deg,#facc15,#16a34a)',durSec:0}
+];
+let streamEl=null;
+function getStream(){if(!streamEl){streamEl=new Audio();streamEl.preload='auto'}return streamEl}
+function ensureStream(song){
+ const el=getStream();
+ if(el.dataset.key!==String(song.id)){el.dataset.key=String(song.id);el.src=song.url;el.load()}
+ return new Promise((resolve,reject)=>{
+  if(el.readyState>=3){song.durSec=song.durSec||Math.floor(el.duration||0);resolve();return}
+  const to=setTimeout(()=>{cleanup();reject(new Error('timeout'))},20000);
+  const done=()=>{clearTimeout(to);cleanup();song.durSec=song.durSec||Math.floor(el.duration||0);resolve()};
+  const fail=()=>{clearTimeout(to);cleanup();reject(new Error('load failed'))};
+  const cleanup=()=>{el.removeEventListener('canplaythrough',done);el.removeEventListener('error',fail)};
+  el.addEventListener('canplaythrough',done);
+  el.addEventListener('error',fail);
+ });
+}
 let customSong=null; // mp3 업로드 시
 let selectedSong=SONGS[1];
 let selectedDiff='NORMAL';
@@ -234,19 +256,22 @@ function updateDiffInfo(){
 const songListEl=document.getElementById('songList');
 function renderSongs(){
  songListEl.innerHTML='';
- const all=[...SONGS];if(customSong)all.push(customSong);
+ const all=[...SONGS,...STREAMS];if(customSong)all.push(customSong);
  all.forEach(s=>{
   const d=document.createElement('div');d.className='song-card'+(selectedSong.id===s.id?' selected':'');
-  d.innerHTML=`<div class="song-jacket" style="background:${s.jacket}">${s.emoji}</div><div class="song-title">${s.title}</div><div class="song-meta">${s.sub}</div><span class="song-bpm">♫ ${s.bpm} BPM • ${s.durSec?s.durSec+'s':'LIVE'}</span>`;
+  d.innerHTML=`<div class="song-jacket" style="background:${s.jacket}">${s.emoji}</div><div class="song-title">${s.title}</div><div class="song-meta">${s.sub}</div><span class="song-bpm">♫ ${s.bpm} BPM • ${s.isStream?(s.durSec?s.durSec+'s • 원곡 STREAM':'원곡 STREAM'):s.durSec?s.durSec+'s':'LIVE'}</span>`;
   d.onclick=()=>{selectedSong=s;renderSongs();updateDiffInfo()};songListEl.appendChild(d);
  });
 }
 renderSongs();updateDiffInfo();
+STREAMS.forEach(s=>{ensureStream(s).then(()=>renderSongs()).catch(()=>{})}); // 원곡 미리 로드(재생 시간 표시용)
 document.querySelectorAll('.diff-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.diff-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedDiff=b.dataset.diff;updateDiffInfo()});
 document.getElementById('speed').oninput=e=>document.getElementById('speedVal').textContent=(+e.target.value).toFixed(1);
 document.getElementById('howBtn').onclick=()=>document.getElementById('howBox').classList.toggle('hidden');
 let customBpm=150;
-document.getElementById('customBpmBtn').onclick=()=>{const v=prompt('커스텀 MP3의 BPM을 입력 (모르면 120~150 사이 추측)',customBpm);if(v){customBpm=Math.max(60,Math.min(220,parseInt(v)||150));document.getElementById('customBpmVal').textContent=customBpm}};
+document.getElementById('customBpmBtn').onclick=()=>{
+ if(selectedSong.isStream){const v=prompt('원곡 스트리밍 곡의 BPM을 입력 (박자가 어긋나면 조절)',selectedSong.bpm);if(v){selectedSong.bpm=Math.max(60,Math.min(220,parseInt(v)||140));renderSongs();updateDiffInfo()}return}
+ const v=prompt('커스텀 MP3의 BPM을 입력 (모르면 120~150 사이 추측)',customBpm);if(v){customBpm=Math.max(60,Math.min(220,parseInt(v)||150));document.getElementById('customBpmVal').textContent=customBpm}};
 
 /* ============ 오디오 엔진 ============ */
 let AC=null,master=null;
@@ -266,7 +291,7 @@ function hitSE(ok){const ac=audio();const o=ac.createOscillator(),g=ac.createGai
 function buildChart(song,diffKey){
  const D=DIFFS[diffKey];const beat=60/song.bpm;const notes=[];
  const push=(lane,time,dur,kind)=>notes.push({lane,time,dur:dur||0,kind,judged:false,holdState:kind==='hold'?'wait':null,tailJudged:false});
- if(song.isCustom){
+ if(song.isCustom||song.isStream){
   // 커스텀 mp3: BPM 기준으로 랜덤 생성 (난이도별 밀도/기믹 차별화)
   const totalBeats=Math.floor(song.durSec/beat);
   let lane=2;
@@ -368,6 +393,21 @@ let score=0,combo=0,maxCombo=0,life=100,counts={perfect:0,great:0,good:0,miss:0}
 let speed=5,autoPlay=false,isCustomPlaying=false,customBuffer=null,customSource=null;
 let laneFlash=[0,0,0,0,0],effects=[],paused=false,pauseTime=0;
 let judgeEl=document.getElementById('judgePopup');
+// 비주얼 헬퍼: 파티클·콤보팝·색상
+let particles=[];
+let lastComboShown=0,comboPop=0;
+function hexA(hex,a){const h=hex.replace('#','');return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`}
+function jColor(j){return j==='perfect'?'#ffd700':j==='great'?'#4ade80':j==='miss'?'#f43f5e':'#60a5fa'}
+function laneX(l){const W=cv.clientWidth||560;return l*(W/5)+W/10}
+function judgeYOf(){return (cv.clientHeight||700)-110}
+function spawnBurst(lane,color,n){
+ const x=laneX(lane),y=judgeYOf();
+ for(let i=0;i<(n||10);i++){
+  const a=Math.random()*Math.PI*2,sp=120+Math.random()*260;
+  particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-140,life:0.45+Math.random()*0.25,max:0.6,s:4+Math.random()*6,rot:Math.random()*6,color});
+ }
+ if(particles.length>240)particles.splice(0,particles.length-240);
+}
 // 등속 슬라이드: 속도 설정 → 초당 픽셀(px/sec)로 고정. 프세카처럼 항상 같은 속도로 내려옴
 function pxPerSec(){return 180+speed*70} // 속도 2→320, 5→530, 10→880 px/s
 function scrollSecFor(){const H=cv.clientHeight||Math.max(400,Math.min(900,window.innerHeight-132));return (H-110)/pxPerSec()}
@@ -380,7 +420,7 @@ function showScreen(id){['select-screen','game-screen','result-screen'].forEach(
 function startGame(){
  audio();
  const song=selectedSong;
- notes=buildChart(song,selectedDiff);
+ notes=(song.isStream&&!song.durSec)?[]:buildChart(song,selectedDiff); // 스트리밍곡은 길이 확정 후 생성
  score=0;combo=0;maxCombo=0;life=100;counts={perfect:0,great:0,good:0,miss:0};
  effects=[];paused=false;
  speed=+document.getElementById('speed').value;
@@ -391,11 +431,23 @@ function startGame(){
  let c=3;cd.textContent=c;
  const cdInt=setInterval(()=>{c--;if(c<=0){clearInterval(cdInt);cd.classList.add('hidden');beginSong(song)}else cd.textContent=c},600);
 }
-function beginSong(song){
+async function beginSong(song){
  const ac=audio();
  const delay=0.15;
  const lead=Math.max(1.2,scrollSecFor()+0.4); // 첫 노트가 화면 위에 미리 보여야 자연스럽게 미끄러짐
  songStart=ac.currentTime+delay+lead;
+ if(song.isStream){
+  const el=getStream();
+  try{await ensureStream(song)}
+  catch(e){alert('😢 원곡 스트리밍 로드 실패!\n인터넷 연결이나 URL을 확인해줘.\n('+e.message+')');showScreen('select-screen');songPlaying=false;return}
+  if(!notes.length)notes=buildChart(song,selectedDiff);
+  try{el.currentTime=0;await el.play()}
+  catch(e){alert('😢 원곡 재생 실패! START를 다시 눌러줘.');showScreen('select-screen');songPlaying=false;return}
+  songStart=ac.currentTime-el.currentTime; // 실제 재생 시작점에 맞춤
+  songPlaying=true;lastFrameT=0;
+  cancelAnimationFrame(raf);loop();
+  return;
+ }
  if(song.isCustom&&customBuffer){
   customSource=ac.createBufferSource();customSource.buffer=customBuffer;customSource.connect(master);
   customSource.start(songStart);
@@ -411,6 +463,7 @@ function songTime(){return audio().currentTime-songStart}
 function endSong(){
  songPlaying=false;cancelAnimationFrame(raf);
  if(customSource){try{customSource.stop()}catch(e){}}
+ try{if(selectedSong&&selectedSong.isStream)getStream().pause()}catch(e){}
  showResult();
 }
 function showResult(){
@@ -438,8 +491,8 @@ document.getElementById('retryBtn').onclick=startGame;
 document.getElementById('backBtn').onclick=()=>showScreen('select-screen');
 document.getElementById('pauseBtn').onclick=()=>{
  if(!songPlaying)return;
- if(!paused){paused=true;pauseTime=audio().currentTime;audio().suspend();document.getElementById('pauseBtn').textContent='▶'}
- else{paused=false;audio().resume();document.getElementById('pauseBtn').textContent='⏸'}
+ if(!paused){paused=true;pauseTime=audio().currentTime;if(selectedSong.isStream){try{getStream().pause()}catch(e){}}audio().suspend();document.getElementById('pauseBtn').textContent='▶'}
+ else{paused=false;if(selectedSong.isStream){try{getStream().play()}catch(e){}}audio().resume();document.getElementById('pauseBtn').textContent='⏸'}
 };
 document.getElementById('fsBtn').onclick=()=>{
  try{
@@ -452,51 +505,87 @@ document.addEventListener('fullscreenchange',()=>{fitCanvas()});
 
 /* ============ 입력 ============ */
 const keyToLane={s:0,d:1,f:2,' ':2,j:3,k:4};
+const flickDown={}; // 키보드 플릭용: 레인별 키 누른 시각
 addEventListener('keydown',e=>{
  if(document.getElementById('game-screen').classList.contains('hidden'))return;
  if(e.repeat)return;
  const l=keyToLane[e.key.toLowerCase()];if(l===undefined)return;
  e.preventDefault();pressLane(l);
+ flickDown[l]=(songPlaying&&!paused)?songTime():null;
 });
 addEventListener('keyup',e=>{
  const l=keyToLane[e.key.toLowerCase()];if(l===undefined)return;
  releaseLane(l);
+ // 키보드 플릭: 짧게 끊어치듯 눌렀다 떼야만 인정 (누르고 있기만 하면 MISS)
+ if(flickDown[l]!=null){
+  const t=(songPlaying&&!paused)?songTime():null;
+  const dur=t!=null?t-flickDown[l]:9;
+  flickDown[l]=null;
+  if(dur<=0.28&&t!=null)tryFlick(l);
+ }
 });
 function canvasLaneFromEvent(e){
  const r=cv.getBoundingClientRect();
  const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
  return Math.max(0,Math.min(4,Math.floor(x/r.width*5)));
 }
-let touchStartY=null,touchLane=null;
-cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const l=Math.max(0,Math.min(4,Math.floor((e.clientX-r.left)/r.width*5)));touchLane=l;touchStartY=e.clientY;pressLane(l);cv.setPointerCapture(e.pointerId)});
-cv.addEventListener('pointerup',e=>{
- // 플릭 판정: 위로 30px 이상 스와이프면 플릭 성공으로 취급 (그냥 놔도 탭으로 처리됨)
- releaseLane(touchLane??0);touchStartY=null;
+const touchMap={}; // 멀티터치 대응: pointerId별 {lane, 시작Y, 시작시각}
+cv.addEventListener('pointerdown',e=>{
+ const r=cv.getBoundingClientRect();
+ const l=Math.max(0,Math.min(4,Math.floor((e.clientX-r.left)/r.width*5)));
+ touchMap[e.pointerId]={lane:l,y:e.clientY,t:performance.now()};
+ pressLane(l); // 탭/홀드만 판정 (플릭은 스와이프해야 맞음)
+ try{cv.setPointerCapture(e.pointerId)}catch(err){}
 });
+const endTouch=e=>{
+ const info=touchMap[e.pointerId];
+ if(info){releaseLane(info.lane);delete touchMap[e.pointerId]}
+};
+cv.addEventListener('pointerup',endTouch);
+cv.addEventListener('pointercancel',endTouch);
 cv.addEventListener('pointermove',e=>{
- if(touchStartY===null)return;
- const dy=touchStartY-e.clientY;
- if(dy>30){ // flick gesture
-  flickSwipe(touchLane);touchStartY=null;
+ const info=touchMap[e.pointerId];if(!info)return;
+ const dy=info.y-e.clientY;
+ if(dy>24&&(performance.now()-info.t)<600){ // 위로 빠르게 쓸어올려야 플릭 인정
+  tryFlick(info.lane);delete touchMap[e.pointerId];
  }
 });
 
-function nearestNote(lane,t){
+function nearestNote(lane,t,skipFlick){
  let best=null,bestD=1e9;
  for(const n of notes){
   if(n.lane!==lane||n.judged)continue;
+  if(skipFlick&&n.kind==='flick')continue; // 플릭은 누르기만으로 맞지 않음
   if(n.kind==='hold'&&n.holdState==='holding')continue;
   const d=Math.abs(n.time-t);
   if(d<bestD){bestD=d;best=n}
  }
  return {note:best,dt:best?best.time-t:0};
 }
+function nearestFlick(lane,t){
+ let best=null,bestD=1e9;
+ for(const n of notes){
+  if(n.lane!==lane||n.judged||n.kind!=='flick')continue;
+  const d=Math.abs(n.time-t);
+  if(d<bestD){bestD=d;best=n}
+ }
+ return {note:best,dt:best?best.time-t:0};
+}
+// 플릭 판정: 스와이프/끊어치기 전용. 그냥 누르기만으론 절대 안 맞음
+function tryFlick(lane){
+ if(!songPlaying||paused||autoPlay)return;
+ const t=songTime();
+ const {note,dt}=nearestFlick(lane,t);
+ if(!note)return;
+ const j=judgeWindow(dt);
+ if(j)hitNote(note,j,lane);
+}
 function judgeWindow(dt){const a=Math.abs(dt);if(a<=0.045)return'perfect';if(a<=0.09)return'great';if(a<=0.13)return'good';return null}
 function pressLane(lane){
  laneFlash[lane]=1;
  if(!songPlaying||paused)return;
  const t=songTime();
- const {note,dt}=nearestNote(lane,t);
+ const {note,dt}=nearestNote(lane,t,true); // 플릭 제외: 누르기만으로 플릭이 맞아선 안 됨
  if(autoPlay)return;
  if(!note)return;
  const j=judgeWindow(dt);
@@ -517,26 +606,22 @@ function releaseLane(lane){
   }
  }
 }
-function flickSwipe(lane){
- // 스와이프 시 해당 레인 플릭노트 우선 처리 (없으면 일반 press와 동일)
- if(!songPlaying||paused)return;
-}
 function hitNote(n,j,lane){
  if(n.kind==='hold'){
   n.judged=true;n.holdState='holding';n.holdLane=lane;
-  applyJudge(j);effects.push({lane,time:performance.now(),txt:j});
+  applyJudge(j);effects.push({lane,time:performance.now(),txt:j});spawnBurst(lane,jColor(j),8);
   hitSE(true);
  }else{
   n.judged=true;applyJudge(j);
-  effects.push({lane,time:performance.now(),txt:j});
+  effects.push({lane,time:performance.now(),txt:j});spawnBurst(lane,jColor(j),12);
   hitSE(j!=='good'||true);
   popup(j);
  }
 }
 function tailHit(n,j){
  n.holdState='done';n.tailJudged=true;
- if(j==='miss'){combo=0;counts.miss++;life=Math.max(0,life-6);popup('miss');hitSE(false)}
- else{applyJudge(j);popup(j);hitSE(true)}
+ if(j==='miss'){combo=0;counts.miss++;life=Math.max(0,life-6);popup('miss');spawnBurst(n.lane,'#f43f5e',6);hitSE(false)}
+ else{applyJudge(j);popup(j);spawnBurst(n.lane,jColor(j),12);hitSE(true)}
 }
 function applyJudge(j){
  if(j==='perfect'){score+=10000/notes.length*1.0;combo++;maxCombo=Math.max(maxCombo,combo);counts.perfect++;life=Math.min(100,life+1)}
@@ -552,6 +637,7 @@ function popup(j){
  judgeEl.textContent=j==='perfect'?'PERFECT!':j==='great'?'GREAT':j==='good'?'GOOD':'MISS';
  judgeEl.className='j-'+j;
  clearTimeout(popup._t);judgeEl.style.opacity=1;
+ try{judgeEl.animate([{transform:'translateX(-50%) scale(1.45)'},{transform:'translateX(-50%) scale(1)'}],{duration:130,easing:'ease-out'})}catch(e){}
  popup._t=setTimeout(()=>judgeEl.style.opacity=0.25,180);
 }
 /* 등속 슬라이드 렌더: y = 판정선 - 남은시간×초당픽셀. 항상 같은 속도로 미끄러지듯 내려옴 */
@@ -567,7 +653,7 @@ function loop(){
  // 오토플레이
  if(autoPlay){
   for(const n of notes){
-   if(!n.judged&&t>=n.time){n.judged=true;if(n.kind==='hold'){n.holdState='done';n.tailJudged=true}applyJudgeAuto(n);effects.push({lane:n.lane,time:performance.now(),txt:'perfect'});popup('perfect')}
+   if(!n.judged&&t>=n.time){n.judged=true;if(n.kind==='hold'){n.holdState='done';n.tailJudged=true}applyJudgeAuto(n);effects.push({lane:n.lane,time:performance.now(),txt:'perfect'});spawnBurst(n.lane,'#ffd700',8);popup('perfect')}
   }
  }
  // 홀드 실패(놓침) 체크
@@ -584,6 +670,11 @@ function loop(){
  // 종료 체크
  const lastT=notes.length?notes[notes.length-1].time+(notes[notes.length-1].dur||0):0;
  if(t>lastT+2){endSong();return}
+ // 콤보 팝 + 파티클 물리 (프레임 독립)
+ if(combo!==lastComboShown){if(combo>lastComboShown)comboPop=1;lastComboShown=combo}
+ comboPop=Math.max(0,comboPop-frameDt*4);
+ for(const p of particles){p.x+=p.vx*frameDt;p.y+=p.vy*frameDt;p.vy+=500*frameDt;p.rot+=frameDt*6;p.life-=frameDt}
+ particles=particles.filter(p=>p.life>0);
  draw(t,frameDt);
  // HUD
  document.getElementById('scoreText').textContent=Math.floor(score).toLocaleString();
@@ -613,34 +704,66 @@ function draw(t,frameDt){
  const W=cv.clientWidth||560,H=cv.clientHeight||700;
  const dtF=frameDt||0.016;
  ctx.clearRect(0,0,W,H);
- // 배경 그라데이션
- const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1e1b4b');g.addColorStop(1,'#0f0a2e');
+ const c1=(selectedSong&&selectedSong.color1)||'#38bdf8';
+ const c2=(selectedSong&&selectedSong.color2)||'#8b5cf6';
+ const now=performance.now();
+ // 배경: 곡 테마 그라데이션 + 드리프트 오브
+ const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#141433');g.addColorStop(1,'#0b0a24');
  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ const orbs=[[c1,.18,.28,.42,.00011,0],[c2,.82,.22,.38,.00009,2],[c1,.75,.75,.34,.00007,4],[c2,.2,.8,.30,.00010,1]];
+ for(const o of orbs){
+  const ox=W*(o[1]+0.07*Math.sin(now*o[4]+o[5])),oy=H*(o[2]+0.06*Math.cos(now*o[4]*1.3+o[5]*2)),orr=Math.max(W,H)*o[3];
+  const rg=ctx.createRadialGradient(ox,oy,0,ox,oy,orr);
+  rg.addColorStop(0,hexA(o[0],0.20));rg.addColorStop(1,hexA(o[0],0));
+  ctx.fillStyle=rg;ctx.fillRect(ox-orr,oy-orr,orr*2,orr*2);
+ }
+ // 둥실 떠다니는 음표
+ ctx.textAlign='center';
+ for(let i=0;i<12;i++){
+  const nx=(i*97.3)%1,ny=((i*57.7)%1+now*0.00002*(1+i%3))%1;
+  ctx.globalAlpha=0.07;ctx.fillStyle='#fff';ctx.font=(16+(i%3)*8)+'px sans-serif';
+  ctx.fillText(i%2?'♪':'♫',nx*W,ny*H);
+ }
+ ctx.globalAlpha=1;
  const laneW=W/LANES;
  const judgeY=H-110;
  const vpx=pxPerSec(); // 등속: 항상 같은 px/s로 미끄러짐
  const scrollWin=judgeY/vpx; // 노트가 화면에 보이는 시간(초)
- const now=performance.now();
- // 레인
+ // 레인: 은은한 세로 그라데이션 + 곡 컬러 구분선
  for(let i=0;i<LANES;i++){
-  ctx.fillStyle=i%2?'#ffffff08':'#ffffff03';
-  ctx.fillRect(i*laneW,0,laneW,H);
-  ctx.strokeStyle='#ffffff22';ctx.lineWidth=1;ctx.strokeRect(i*laneW+0.5,0,laneW-1,H);
-  // 플래시 (프레임 독립 감쇠 → 60/120Hz 동일)
-  if(laneFlash[i]>0){ctx.fillStyle=`rgba(255,203,5,${laneFlash[i]*0.35})`;ctx.fillRect(i*laneW,0,laneW,H);laneFlash[i]=Math.max(0,laneFlash[i]-dtF*5)}
+  const lx=i*laneW;
+  const lg=ctx.createLinearGradient(0,0,0,H);
+  lg.addColorStop(0,'rgba(255,255,255,.05)');lg.addColorStop(1,'rgba(255,255,255,.012)');
+  ctx.fillStyle=lg;ctx.fillRect(lx,0,laneW,H);
+  ctx.strokeStyle=hexA(c1,0.35);ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(lx+0.5,0);ctx.lineTo(lx+0.5,H);ctx.stroke();
+  // 플래시: 아래에서 위로 스며드는 빛 (프레임 독립 감쇠 → 60/120Hz 동일)
+  if(laneFlash[i]>0){
+   const fg=ctx.createLinearGradient(0,judgeY-180,0,judgeY);
+   fg.addColorStop(0,'rgba(255,255,255,0)');fg.addColorStop(1,`rgba(255,255,255,${laneFlash[i]*0.32})`);
+   ctx.fillStyle=fg;ctx.fillRect(lx,0,laneW,H);
+   laneFlash[i]=Math.max(0,laneFlash[i]-dtF*5);
+  }
   // 키 라벨
-  ctx.fillStyle='#ffffff66';ctx.font='bold 18px sans-serif';ctx.textAlign='center';
-  ctx.fillText(['S','D','F','J','K'][i],i*laneW+laneW/2,H-28);
+  ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='bold 18px sans-serif';ctx.textAlign='center';
+  ctx.fillText(['S','D','F','J','K'][i],lx+laneW/2,H-28);
  }
- // 판정선 + 레인 리셉터 (프세카식 네모 틀, 누르면 부드럽게 커짐)
- ctx.fillStyle='#ffcb05';ctx.fillRect(0,judgeY-3,W,6);
+ // 판정선: 곡 컬러 네온 + 레인 리셉터 (누르면 부드럽게 커짐)
+ ctx.save();ctx.shadowColor=c1;ctx.shadowBlur=16;
+ ctx.fillStyle=c1;ctx.fillRect(0,judgeY-2.5,W,5);
+ ctx.restore();
+ ctx.fillStyle='rgba(255,255,255,.9)';ctx.fillRect(0,judgeY-1,W,2);
  const recW=laneW*0.86,recH=22;
  for(let i=0;i<LANES;i++){
   const x=i*laneW+laneW/2,f=laneFlash[i]||0;
   const rw=recW+f*22,rh=recH+f*10;
-  ctx.globalAlpha=0.9;ctx.strokeStyle=f>0.35?'#ffcb05':'#ffffff55';ctx.lineWidth=2+f*2;
-  ctx.beginPath();ctx.roundRect(x-rw/2,judgeY-rh/2,rw,rh,7);ctx.stroke();ctx.globalAlpha=1;
+  ctx.save();
+  if(f>0.05){ctx.shadowColor='#fff';ctx.shadowBlur=12+f*14}
+  ctx.globalAlpha=0.95;ctx.strokeStyle=f>0.35?'#ffffff':hexA(c1,0.75);ctx.lineWidth=2+f*2;
+  ctx.beginPath();ctx.roundRect(x-rw/2,judgeY-rh/2,rw,rh,7);ctx.stroke();
+  ctx.restore();
  }
+ ctx.globalAlpha=1;
  // 노트 (프세카식 네모 막대)
  const trailLen=vpx*0.085; // 슬라이드 잔상 길이 (이동 방향 뒤쪽)
  const noteW=laneW*0.86; // 노트 막대 너비 (레인 폭 기준)
@@ -656,7 +779,7 @@ function draw(t,frameDt){
   const showTrail=n.kind==='hold'?(n.holdState==='holding'||!n.judged):!n.judged;
   if(showTrail&&y>-20&&y<H+40){
    const tg=ctx.createLinearGradient(0,y-trailLen-14,0,y+6);
-   tg.addColorStop(0,'rgba(255,255,255,0)');tg.addColorStop(1,col+'55');
+   tg.addColorStop(0,'rgba(255,255,255,0)');tg.addColorStop(1,hexA(col,0.30));
    ctx.fillStyle=tg;
    ctx.beginPath();ctx.roundRect(x-noteW/2,y-trailLen-14,noteW,trailLen+20,10);ctx.fill();
   }
@@ -667,13 +790,20 @@ function draw(t,frameDt){
     const yHead=n.holdState==='holding'?judgeY:y; // 잡은 뒤에는 헤드가 판정선에 고정
     const top=Math.min(yHead,yTail),hh=Math.abs(yHead-yTail)+30;
     const hw=noteW*0.62; // 홀드 바는 헤드보다 살짝 좁게 (프세카식)
+    ctx.save();ctx.shadowColor='#4ade80';ctx.shadowBlur=12;
     const hg=ctx.createLinearGradient(x-hw/2,0,x+hw/2,0);
-    hg.addColorStop(0,'rgba(34,197,94,.5)');
-    hg.addColorStop(0.5,n.holdState==='holding'?'#4ade80':'rgba(34,197,94,.9)');
-    hg.addColorStop(1,'rgba(34,197,94,.5)');
+    hg.addColorStop(0,'rgba(34,197,94,.35)');
+    hg.addColorStop(0.5,n.holdState==='holding'?'#86efac':'rgba(74,222,128,.95)');
+    hg.addColorStop(1,'rgba(34,197,94,.35)');
     ctx.fillStyle=hg;
     ctx.beginPath();ctx.roundRect(x-hw/2,top,hw,hh,10);ctx.fill();
-    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+    ctx.shadowBlur=0;
+    ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1.5;ctx.stroke();
+    // 바를 따라 흐르는 빛방울
+    const flow=(now/700)%1,fy=top+hh*flow;
+    ctx.globalAlpha=fade*Math.sin(flow*Math.PI)*0.8;ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.ellipse(x,fy,4,7,0,0,7);ctx.fill();ctx.globalAlpha=fade;
+    ctx.restore();
    }
    if(!n.judged){
     drawRectNote(x,y,noteW,'#4ade80',1+0.22*Math.max(0,1-Math.abs(dtn)/0.12));
@@ -688,12 +818,12 @@ function draw(t,frameDt){
     drawRectNote(x,y,noteW,'#f43f5e',pop);
     // 위로 미끄러지듯 통통 튀는 쉐브론 (플릭 방향 표시)
     const bob=Math.sin(now/130)*3;
-    ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.lineCap='round';
+    ctx.save();ctx.shadowColor='#fff';ctx.shadowBlur=8;ctx.fillStyle='#fff';
     for(let k=0;k<2;k++){
      const cy=y-18-k*11+bob;
-     ctx.beginPath();ctx.moveTo(x-11,cy);ctx.lineTo(x,cy-8);ctx.lineTo(x+11,cy);ctx.stroke();
+     ctx.beginPath();ctx.moveTo(x-11,cy+2);ctx.lineTo(x,cy-7);ctx.lineTo(x+11,cy+2);ctx.lineTo(x+11,cy+7);ctx.lineTo(x,cy-2);ctx.lineTo(x-11,cy+7);ctx.closePath();ctx.fill();
     }
-    ctx.lineCap='butt';
+    ctx.restore();
     if(Math.abs(dtn)<0.25){ctx.globalAlpha=fade*(1-Math.abs(dtn)/0.25);ctx.strokeStyle='#f43f5e';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,26+(0.25-Math.abs(dtn))*120,0,7);ctx.stroke();ctx.globalAlpha=fade}
    }
   }else{
@@ -706,35 +836,76 @@ function draw(t,frameDt){
   }
   ctx.globalAlpha=1;
  }
- // 히트 이펙트
+ // 히트 이펙트 (네온 링)
  effects=effects.filter(e=>now-e.time<300);
  for(const e of effects){
   const p=(now-e.time)/300;const x=e.lane*laneW+laneW/2;
-  ctx.globalAlpha=1-p;ctx.strokeStyle=e.txt==='perfect'?'#ffd700':e.txt==='great'?'#4ade80':'#60a5fa';ctx.lineWidth=4;
-  ctx.beginPath();ctx.arc(x,judgeY,20+p*50,0,7);ctx.stroke();ctx.globalAlpha=1;
+  const ec=e.txt==='perfect'?'#ffd700':e.txt==='great'?'#4ade80':e.txt==='miss'?'#f43f5e':'#60a5fa';
+  ctx.save();ctx.globalAlpha=1-p;ctx.strokeStyle=ec;ctx.lineWidth=4;ctx.shadowColor=ec;ctx.shadowBlur=14;
+  ctx.beginPath();ctx.arc(x,judgeY,20+p*50,0,7);ctx.stroke();ctx.restore();
  }
- // 진행바
+ ctx.globalAlpha=1;
+ // 파티클 (히트 시 튀는 네모 조각)
+ for(const p of particles){
+  ctx.globalAlpha=Math.max(0,p.life/p.max);
+  ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);
+  ctx.shadowColor=p.color;ctx.shadowBlur=10;
+  ctx.fillStyle=p.color;ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s);
+  ctx.restore();
+ }
+ ctx.globalAlpha=1;
+ // 콤보 스플래시 (판정선 아래)
+ if(combo>1){
+  const cs=1+comboPop*0.45;
+  ctx.save();ctx.translate(W/2,judgeY+54);ctx.scale(cs,cs);
+  ctx.textAlign='center';ctx.shadowColor='#ffcb05';ctx.shadowBlur=14;
+  ctx.fillStyle='#fff';ctx.font='900 24px sans-serif';
+  ctx.fillText(combo,0,0);
+  ctx.shadowBlur=0;ctx.fillStyle=hexA(c1,0.95);ctx.font='800 11px sans-serif';
+  ctx.fillText('COMBO',0,15);
+  ctx.restore();
+ }
+ // 진행바 (곡 컬러)
  const lastT=notes.length?notes[notes.length-1].time:1;
  ctx.fillStyle='#ffffff33';ctx.fillRect(0,0,W,6);
- ctx.fillStyle='#ffcb05';ctx.fillRect(0,0,W*Math.max(0,Math.min(1,t/lastT)),6);
+ ctx.save();ctx.shadowColor=c1;ctx.shadowBlur=8;
+ ctx.fillStyle=c1;ctx.fillRect(0,0,W*Math.max(0,Math.min(1,t/lastT)),6);
+ ctx.restore();
  // 곡명
  ctx.fillStyle='#ffffffaa';ctx.font='12px sans-serif';ctx.textAlign='left';
  ctx.fillText(`${selectedSong.title} [${selectedDiff} Lv.${DIFFS[selectedDiff].level}]  BPM ${selectedSong.bpm}`,10,20);
+ // 비네트
+ const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.35,W/2,H/2,Math.max(W,H)*0.75);
+ vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.45)');
+ ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
 }
-/* 프세카식 네모 막대 노트: 레인 폭 기준 둥근 막대 + 흰 테두리 + 하이라이트 */
+/* 프세카식 네모 막대 노트: 유광 그라데이션 + 네온 글로우 + 광택 */
 function drawRectNote(x,y,w,color,scale){
  const s=scale||1;
- const bw=w,bh=22*s;
- ctx.fillStyle='#0b1026';
- ctx.beginPath();ctx.roundRect(x-bw/2-3,y-bh/2-3,bw+6,bh+6,9);ctx.fill();
+ const bw=w,bh=20*s;
+ ctx.save();
+ ctx.shadowColor=color;ctx.shadowBlur=20;
+ // 어두운 밑받침
+ ctx.fillStyle='rgba(5,5,20,.9)';
+ ctx.beginPath();ctx.roundRect(x-bw/2-2.5,y-bh/2-2.5,bw+5,bh+5,9);ctx.fill();
+ // 본체: 위 흰→컬러
  const ng=ctx.createLinearGradient(0,y-bh/2,0,y+bh/2);
- ng.addColorStop(0,'#ffffff');ng.addColorStop(0.32,color);ng.addColorStop(1,color);
+ ng.addColorStop(0,'#ffffff');ng.addColorStop(0.30,color);ng.addColorStop(1,color);
  ctx.fillStyle=ng;
- ctx.beginPath();ctx.roundRect(x-bw/2,y-bh/2,bw,bh,8);ctx.fill();
- ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();
- // 중앙 코어 라인
- ctx.fillStyle='rgba(255,255,255,.4)';
- ctx.fillRect(x-bw/2+7,y-1.5,bw-14,3);
+ ctx.beginPath();ctx.roundRect(x-bw/2,y-bh/2,bw,bh,7);ctx.fill();
+ // 아래 음영 (입체감)
+ const sh=ctx.createLinearGradient(0,y,0,y+bh/2);
+ sh.addColorStop(0,'rgba(0,0,0,0)');sh.addColorStop(1,'rgba(0,0,0,.35)');
+ ctx.fillStyle=sh;
+ ctx.beginPath();ctx.roundRect(x-bw/2,y-bh/2,bw,bh,7);ctx.fill();
+ ctx.shadowBlur=0;
+ ctx.strokeStyle='rgba(255,255,255,.95)';ctx.lineWidth=2;ctx.stroke();
+ // 광택 + 코어빔
+ ctx.fillStyle='rgba(255,255,255,.8)';
+ ctx.beginPath();ctx.roundRect(x-bw/2+5,y-bh/2+3,bw-10,4.5,2);ctx.fill();
+ ctx.fillStyle='rgba(255,255,255,.55)';
+ ctx.fillRect(x-bw/2+8,y-1.25,bw-16,2.5);
+ ctx.restore();
 }
 
 /* ============ 커스텀 MP3 ============ */
