@@ -143,7 +143,7 @@ input[type=range]{accent-color:#ffcb05}
     🎺=원곡 스트리밍(인터넷 필요) • ⚡🎤=네 로컬 mp3. 박자가 어긋나면 곡을 고른 뒤 ⚙ BPM 버튼으로 조절<br>
     ※ 스트리밍 음원은 archive.org에서 재생되며 레포에 포함되지 않습니다. 본인 소장 mp3는 📁 버튼으로 직접 업로드 가능 (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 15곡 + 내 MP3 2곡 • URL/로컬 재생(레포 미포함) • v4.3</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 15곡 + 내 MP3 2곡 • URL/로컬 재생(레포 미포함) • v4.5</div>
 </div>
 
 <!-- 게임 -->
@@ -312,11 +312,11 @@ let selectedSong=STREAMS[0];
 let selectedDiff='NORMAL';
 // 5단계 난이도: 밀도(mult), 최소 간격, 동시치기/플릭/연타 확률로 명확히 차별화
 const DIFFS={
- EASY:{mult:0.85,name:'EASY',minGap:0.18,globalGap:0.11,hold:true,flick:true,flickRate:0.14,doubleRate:0.22,streamRate:0.05,rush:false,rushRate:0,desc:'입문용 • 템포 업! 가끔 플릭+동시치기'},
- NORMAL:{mult:1.2,name:'NORMAL',minGap:0.10,globalGap:0.065,hold:true,flick:true,flickRate:0.20,doubleRate:0.42,streamRate:0.14,rush:false,rushRate:0,desc:'빠른 템포 • 동시치기+연타 맛보기'},
- HARD:{mult:1.4,name:'HARD',minGap:0.075,globalGap:0.045,hold:true,flick:true,flickRate:0.26,doubleRate:0.62,streamRate:0.22,rush:true,rushRate:0.85,desc:'고속 • 동시치기+연타+클라이막스 러시'},
- EXPERT:{mult:1.65,name:'EXPERT',minGap:0.055,globalGap:0.038,hold:true,flick:true,flickRate:0.30,doubleRate:0.75,streamRate:0.30,rush:true,rushRate:1.0,desc:'극악 • 광속 16분 연타+더블 점프'},
- MASTER:{mult:1.9,name:'MASTER',minGap:0.05,globalGap:0.03,hold:true,flick:true,flickRate:0.34,doubleRate:0.85,streamRate:0.35,rush:true,rushRate:1.0,desc:'초극악 • 쉴 틈 없는 광속 러시+연타'}
+ EASY:{mult:0.95,name:'EASY',minGap:0.18,globalGap:0.11,hold:true,flick:true,flickRate:0.14,doubleRate:0.22,streamRate:0.08,rush:false,rushRate:0,desc:'입문용 • 템포 업! 가끔 플릭+동시치기'},
+ NORMAL:{mult:1.3,name:'NORMAL',minGap:0.10,globalGap:0.065,hold:true,flick:true,flickRate:0.20,doubleRate:0.45,streamRate:0.18,rush:true,rushRate:0.5,desc:'빠른 템포 • 동시치기+연타 맛보기'},
+ HARD:{mult:1.5,name:'HARD',minGap:0.075,globalGap:0.045,hold:true,flick:true,flickRate:0.26,doubleRate:0.65,streamRate:0.30,rush:true,rushRate:1.0,desc:'고속 • 동시치기+연타+클라이막스 러시'},
+ EXPERT:{mult:1.75,name:'EXPERT',minGap:0.055,globalGap:0.038,hold:true,flick:true,flickRate:0.30,doubleRate:0.78,streamRate:0.38,rush:true,rushRate:1.0,desc:'극악 • 광속 16분 연타+더블 점프'},
+ MASTER:{mult:2.0,name:'MASTER',minGap:0.05,globalGap:0.03,hold:true,flick:true,flickRate:0.34,doubleRate:0.88,streamRate:0.45,rush:true,rushRate:1.0,desc:'초극악 • 쉴 틈 없는 광속 러시+연타'}
 };
 // 프세카식 난이도 수치: 곡 BPM + 보면 밀도로 곡마다 다르게 산정
 // 수치 = 기본치(E2/N7/H12/EX17/MA22) + round((BPM-100)/7) + 밀도가중(E0/N1/H2/EX3/MA4)
@@ -542,7 +542,7 @@ function buildFromOnsets(song,D,diffKey){
  const push=(lane,time,dur,kind,dir)=>notes.push({lane,time,dur:dur||0,kind,judged:false,holdState:(kind==='hold')?'wait':null,tailJudged:false,dir:dir||'up'});
  const ons=[...song._onsets].sort((a,b)=>a.t-b.t);
  if(!ons.length)return [];
- const keepFrac={EASY:0.40,NORMAL:0.62,HARD:0.82,EXPERT:0.93,MASTER:1.0}[diffKey]||0.5;
+ const keepFrac={EASY:0.50,NORMAL:0.70,HARD:0.88,EXPERT:0.97,MASTER:1.0}[diffKey]||0.5;
  const strs=ons.map(o=>o.str).sort((a,b)=>a-b);
  const cut=strs[Math.min(strs.length-1,Math.floor(strs.length*(1-keepFrac)))]||0;
  const beat=60/song.bpm;
@@ -586,12 +586,16 @@ function buildChart(song,diffKey){
     push(lane,t,kind==='hold'?beat*2:0,kind);
     if(b%8===0&&D.doubleRate>=0.2)push(LANES-1-lane,t,0,'tap'); // 강박 거울 동시치기
     else if(Math.random()<D.doubleRate*0.5)push(LANES-1-lane,t,0,'tap');
-    // 클라이막스 연타: 박 후반부 16분 추가타 (타타타타!)
-    if(D.rush&&(b%16)>=10&&Math.random()<D.rushRate){
+    // 클라이막스 연타: 16분 2연타 (타타타!)
+    if(D.rush&&(b%16)>=8&&Math.random()<D.rushRate){
      let rl=lane+(dir!==0?dir:(Math.random()<0.5?1:-1));
      if(rl<0||rl>LANES-1)rl=LANES-1-lane;
      if(rl===lane)rl=(lane+2)%LANES;
-     push(rl,t+beat*0.5,0,'tap');
+     push(rl,t+beat*0.25,0,'tap');
+     let rl2=rl+(dir!==0?dir:(Math.random()<0.5?1:-1));
+     if(rl2<0||rl2>LANES-1)rl2=LANES-1-rl;
+     if(rl2===rl)rl2=(rl+2)%LANES;
+     push(rl2,t+beat*0.5,0,'tap');
     }
    }
   }
@@ -643,8 +647,8 @@ function buildChart(song,diffKey){
      if(barPos%8===4&&Math.random()<D.doubleRate)push((lane+2)%LANES,time,0,'tap');
     }
     if((diffKey==='EXPERT'||diffKey==='MASTER')&&barPos===8&&Math.random()<0.4)push((lane+1)%LANES,time,0,'tap');
-    // 클라이막스 연타 (HARD+: 멜로디 뒤에 붙는 16분 추가타 — 타타타타! MASTER는 구간 확대)
-    if(D.rush&&(s%64)>=(diffKey==='MASTER'?32:40)&&Math.random()<D.rushRate){
+    // 클라이막스 연타: 멜로디 뒤에 붙는 16분 추가타 — 타타타타! (NORMAL 후반, HARD 중반~, MASTER 전반~)
+    if(D.rush&&(s%64)>=(diffKey==='MASTER'?32:diffKey==='NORMAL'?48:40)&&Math.random()<D.rushRate){
      let rd=lane-prevLane;
      rd=rd===0?(Math.random()<0.5?1:-1):Math.max(-1,Math.min(1,rd));
      let rl=lane+rd;
@@ -1214,7 +1218,7 @@ function applyJudgeAuto(n){applyJudgeSimple('perfect');laneFlash[n.lane]=1}
 function perspP(dt,scrollWin){return Math.max(0,Math.min(1.15,1-dt/scrollWin))}
 function perspE(p){return Math.pow(Math.min(Math.max(p,0),1.05),1.7)}
 function perspS(p){return 0.30+0.70*Math.pow(Math.min(Math.max(p,0),1.05),1.15)}
-function laneXat(lane,W,laneW,p){const cx=W/2;const w=0.25+0.75*Math.min(Math.max(p,0),1.08);return cx+((lane*laneW+laneW/2)-cx)*w}
+function laneXat(lane,W,laneW,p){return lane*laneW+laneW/2} // 평행 레인: 옆으로 흘러가지 않고 곧게 낙하
 // 홀드 꼬리까지 화면에 유지 (머리만 보고 자르면 긴 홀드가 중간에 사라짐)
 function noteVisible(n,t,scrollWin){
  const dtn=n.time-t;
@@ -1251,13 +1255,10 @@ function draw(t,frameDt){
   const judgeY=H-judgeMargin(H); // 하단 오버레이 힌트와 겹치지 않게 (가로 모드 대응)
  const vpx=pxPerSec(); // 등속: 항상 같은 px/s로 미끄러짐
  const scrollWin=judgeY/vpx; // 노트가 화면에 보이는 시간(초)
- const topY=10; // 소실점 높이
- const cx=W/2;
- // 원근 투영: p=0(상단·멀리·작게) → 1(판정선·가깝게·크게)
- const pClamp=p=>Math.max(0,Math.min(p,1.08));
- const laneXat=(lane,pp)=>{const w=0.25+0.75*pClamp(pp);return cx+((lane*laneW+laneW/2)-cx)*w};
- // 레인: 원근 사다리꼴 (위로 좁아지며 모임)
- const qx=(fi,pp)=>{const w=0.25+0.75*pClamp(pp);return cx+(fi*W-cx)*w};
+ const topY=10;
+ // 평행 레인: 옆에서 중간으로 모이지 않고 곧게 낙하 (크기 원근만 유지)
+ const laneXat=(lane,pp)=>lane*laneW+laneW/2;
+ const qx=(fi,pp)=>fi*W;
  for(let i=0;i<LANES;i++){
   const f0=i/LANES,f1=(i+1)/LANES;
   const lg=ctx.createLinearGradient(0,0,0,H);
