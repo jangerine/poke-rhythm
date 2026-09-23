@@ -55,6 +55,7 @@ body{font-family:'Pretendard','Malgun Gothic',sans-serif;background:#0b1026;colo
 .diff-btn[data-diff="EXPERT"].active{background:#f43f5e;color:#fff}
 .diff-btn[data-diff="MASTER"].active{background:#a855f7;color:#fff}
 .diff-btn .lv{display:block;font-size:11px;font-weight:700;opacity:.75}
+.diff-btn.key-btn.active{background:#fff;color:#111}
 #diffInfo{margin-top:6px;font-size:13px;color:#ffcb05;font-weight:700;min-height:20px;text-align:center}
 /* 버튼 */
 .btn{padding:14px 36px;font-size:18px;font-weight:900;border:none;border-radius:16px;cursor:pointer;transition:.15s}
@@ -99,8 +100,12 @@ input[type=range]{accent-color:#ffcb05}
 <div id="select-screen" class="screen">
   <div class="pokeball"></div>
   <div class="title"><span>포케리듬</span><br>프세카풍 리듬게임</div>
-  <div class="subtitle">⚡ 4레인 낙하형 • 탭 / 홀드 / 플릭 • 원곡 스트리밍 15곡 + 내 MP3 2곡</div>
+  <div class="subtitle">⚡ 4키/6키 낙하형 • 탭 / 홀드 / 플릭 • 원곡 스트리밍 15곡 + 내 MP3 2곡</div>
   <div id="songList"></div>
+  <div class="diff-row" id="keyRow">
+    <button class="diff-btn key-btn active" data-keys="4">4키 <span class="lv">D F J K</span></button>
+    <button class="diff-btn key-btn" data-keys="6">6키 <span class="lv">S D F J K L</span></button>
+  </div>
   <div class="diff-row" id="diffRow">
     <button class="diff-btn" data-diff="EASY">EASY<span class="lv">Lv.5 ★★★★★</span></button>
     <button class="diff-btn active" data-diff="NORMAL">NORMAL<span class="lv">Lv.8 ★★★★★★★★</span></button>
@@ -131,14 +136,14 @@ input[type=range]{accent-color:#ffcb05}
   </div>
   <div class="help hidden" id="howBox">
     <b>🎮 조작법 (4레인)</b><br>
-    키보드: <kbd>D</kbd> <kbd>F</kbd>(또는 Space) <kbd>J</kbd> <kbd>K</kbd> — 아래 판정선에 닿을 때 누르기<br>
+    키보드: 4키[<kbd>D</kbd> <kbd>F</kbd>(Space) <kbd>J</kbd> <kbd>K</kbd>] / 6키[<kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd>(Space) <kbd>J</kbd> <kbd>K</kbd> <kbd>L</kbd>] — 시작 화면에서 선택<br>
     모바일: 레인 터치 / 플릭노트는 위로 쓸어올리기 필수<br>
     🟦 파랑 네모 막대 = 탭 &nbsp; 🟢 초록 긴바 = 홀드(끝까지 누르고 있기) &nbsp; 🟥 빨강 화살막대 = 플릭 — 모바일은 위로 쓸어올리기, 키보드는 짧게 끊어치듯 눌렀다 떼기 (그냥 누르기만 하면 MISS!)<br>
     판정: PERFECT ±45ms / GREAT ±90ms / GOOD ±130ms<br>
     🎺=원곡 스트리밍(인터넷 필요) • ⚡🎤=네 로컬 mp3. 박자가 어긋나면 곡을 고른 뒤 ⚙ BPM 버튼으로 조절<br>
     ※ 스트리밍 음원은 archive.org에서 재생되며 레포에 포함되지 않습니다. 본인 소장 mp3는 📁 버튼으로 직접 업로드 가능 (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 15곡 + 내 MP3 2곡 • URL/로컬 재생(레포 미포함) • v4.0</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 15곡 + 내 MP3 2곡 • URL/로컬 재생(레포 미포함) • v4.3</div>
 </div>
 
 <!-- 게임 -->
@@ -368,6 +373,7 @@ STREAMS.forEach(s=>{ // 별도 프로브로 각 URL 로드 가능 여부+재생 
  }catch(e){s.ok=false}
 });
 document.querySelectorAll('.diff-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.diff-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedDiff=b.dataset.diff;updateDiffInfo()});
+document.querySelectorAll('.key-btn').forEach(b=>b.onclick=()=>setKeyMode(+b.dataset.keys));
 document.getElementById('speed').oninput=e=>document.getElementById('speedVal').textContent=(+e.target.value).toFixed(1);
 document.getElementById('howBtn').onclick=()=>document.getElementById('howBox').classList.toggle('hidden');
 let customBpm=150;
@@ -441,10 +447,125 @@ function lead(t,freq,dur,v=0.22,type='square'){const ac=audio();const o=ac.creat
 function bassN(t,freq,dur,v=0.3){const ac=audio();const o=ac.createOscillator(),g=ac.createGain();o.type='triangle';o.frequency.value=freq;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.02)}
 function hitSE(ok){const ac=audio();const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=ok?880:160;g.gain.value=0.12;g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.08);o.connect(g);g.connect(master);o.start();o.stop(ac.currentTime+0.09)}
 
+/* ============ 파형 분석 → 음악 싱크 온셋 ============ */
+// fetch+decode 실패하면 예외 → 호출자가 랜덤 그리드로 폴백
+async function analyzeTrack(url,bpm){
+ const res=await fetch(url,{mode:'cors'});
+ if(!res.ok)throw new Error('http '+res.status);
+ const ab=await audio().decodeAudioData(await res.arrayBuffer());
+ return analyzeBuffer(ab,bpm);
+}
+function analyzeBuffer(ab,bpm){
+ const sr=ab.sampleRate;
+ const c0=ab.getChannelData(0);
+ const N=Math.min(c0.length,Math.floor(sr*150));
+ const mono=new Float32Array(N);
+ if(ab.numberOfChannels<2){mono.set(c0.subarray(0,N))}
+ else{const c1=ab.getChannelData(1);for(let i=0;i<N;i++)mono[i]=(c0[i]+c1[i])*0.5}
+ // 4밴드 에너지 포락선 (1-pole lowpass 캐스케이드, 1패스로 계산)
+ const aOf=fc=>1-Math.exp(-2*Math.PI*fc/sr);
+ const a250=aOf(250),a1000=aOf(1000),a4000=aOf(4000);
+ const hop=512;
+ const frames=Math.max(1,Math.floor(N/hop));
+ const eB=[new Float32Array(frames),new Float32Array(frames),new Float32Array(frames),new Float32Array(frames)];
+ const eAll=new Float32Array(frames),hfcA=new Float32Array(frames);
+ let p250=0,p1000=0,p4000=0;
+ for(let f=0;f<frames;f++){
+  let e0=0,e1=0,e2=0,e3=0,ea=0,hh=0,prev=0;
+  const st=f*hop,en=Math.min(N,st+hop);
+  for(let i=st;i<en;i++){
+   const x=mono[i];
+   p250+=a250*(x-p250);p1000+=a1000*(x-p1000);p4000+=a4000*(x-p4000);
+   const y0=p250,y1=p1000-p250,y2=p4000-p1000,y3=x-p4000;
+   e0+=y0*y0;e1+=y1*y1;e2+=y2*y2;e3+=y3*y3;ea+=x*x;hh+=Math.abs(x-prev);prev=x;
+  }
+  const m=1/Math.max(1,en-st);
+  eB[0][f]=e0*m;eB[1][f]=e1*m;eB[2][f]=e2*m;eB[3][f]=e3*m;eAll[f]=ea*m;hfcA[f]=hh*m;
+ }
+ // 온셋 검출 (에너지+HFC novelty, 적응 임계)
+ const nov=new Float32Array(frames);
+ for(let f=2;f<frames;f++){
+  const de=Math.max(0,eAll[f]-eAll[f-1])+0.5*Math.max(0,eAll[f]-eAll[f-2]);
+  const dh=Math.max(0,hfcA[f]-hfcA[f-1]);
+  nov[f]=de+0.8*dh;
+ }
+ let mean=0,mx=0;for(let f=0;f<frames;f++){mean+=nov[f];if(nov[f]>mx)mx=nov[f]}mean/=frames;
+ let sd=0;for(let f=0;f<frames;f++)sd+=(nov[f]-mean)*(nov[f]-mean);sd=Math.sqrt(sd/Math.max(1,frames));
+ const thr=Math.max(1e-7,Math.min(mean+1.1*sd,mx*0.12)); // 조용한 곡도 걸리게 상한
+ const minD=Math.max(2,Math.round(0.09*sr/hop));
+ const peaks=[];
+ let last=-1e9;
+ for(let f=3;f<frames-3;f++){
+  if(nov[f]<thr)continue;
+  let mx=true;
+  for(let k=1;k<=3;k++)if(nov[f]<nov[f-k]||nov[f]<nov[f+k]){mx=false;break}
+  if(!mx)continue;
+  if(f-last<minD)continue;
+  last=f;peaks.push(f);
+ }
+ const beat=60/bpm,grid=0.25*beat;
+ const dur=N/sr;
+ const srt=peaks.map(f=>nov[f]).sort((a,b)=>a-b);
+ const accCut=srt[Math.floor(srt.length*0.82)]||Infinity; // 상위 18% = 악센트
+ const argmax=f=>{
+  let bi=0,bv=-1;
+  for(let b=0;b<4;b++){let s=0,c=0;for(let k=-4;k<=4;k++){const ff=f+k;if(ff<0||ff>=frames)continue;s+=eB[b][ff];c++}const v=s/Math.max(1,c);if(v>bv){bv=v;bi=b}}
+  return bi;
+ };
+ const onsets=[];
+ for(const f of peaks){
+  let t=f*hop/sr;
+  const sn=Math.round(t/grid)*grid;
+  if(Math.abs(t-sn)<=0.07)t=sn; // 16분 그리드 스냅
+  if(t<1.0||t>dur-1.0)continue;
+  const lane=argmax(f);
+  const e0=eAll[f]||1e-9;
+  const maxScan=Math.min(frames-f-1,Math.round(2.5*sr/hop));
+  let k=0;
+  for(;k<maxScan;k++){if(eAll[f+k]<e0*0.35)break}
+  let kind='tap',dur2=0;
+  if(k*hop/sr>=0.7){kind='hold';dur2=Math.min(2.5,k*hop/sr)} // 서스테인 → 홀드
+  else if(nov[f]>=accCut)kind='flick'; // 악센트 → 플릭
+  let dir='up';
+  if(kind==='flick'){
+   const later=argmax(Math.min(frames-1,f+8));
+   if(later>lane)dir='right';else if(later<lane)dir='left';
+  }
+  onsets.push({t,lane,kind,dur:dur2,dir,str:nov[f]});
+ }
+ onsets.sort((a,b)=>a.t-b.t);
+ return {onsets,duration:dur};
+}
+// 분석 온셋 → 난이도별 채보 (강도 분위수로 밀도 조절, 빡세게 유지)
+function buildFromOnsets(song,D,diffKey){
+ const notes=[];
+ const push=(lane,time,dur,kind,dir)=>notes.push({lane,time,dur:dur||0,kind,judged:false,holdState:(kind==='hold')?'wait':null,tailJudged:false,dir:dir||'up'});
+ const ons=[...song._onsets].sort((a,b)=>a.t-b.t);
+ if(!ons.length)return [];
+ const keepFrac={EASY:0.40,NORMAL:0.62,HARD:0.82,EXPERT:0.93,MASTER:1.0}[diffKey]||0.5;
+ const strs=ons.map(o=>o.str).sort((a,b)=>a-b);
+ const cut=strs[Math.min(strs.length-1,Math.floor(strs.length*(1-keepFrac)))]||0;
+ const beat=60/song.bpm;
+ for(const o of ons){
+  if(o.str<cut)continue;
+  const L=Math.round(o.lane/3*(LANES-1)); // 분석 4밴드 → 현재 레인 수로 매핑
+  let kind=o.kind;
+  if(kind==='flick'&&Math.random()>Math.min(1,D.flickRate*4))kind='tap';
+  let dir=o.dir||'up';
+  if(kind==='flick'&&diffKey!=='HARD'&&diffKey!=='EXPERT'&&diffKey!=='MASTER')dir='up';
+  push(L,o.t,o.dur||0,kind,dir);
+  if(D.doubleRate>0.3){ // HARD+ 강박 거울 동시치기
+   const bar=Math.round(o.t/beat)%4;
+   if(bar===0&&Math.random()<D.doubleRate*0.5)push(LANES-1-L,o.t,0,'tap','up');
+  }
+ }
+ return filterNotes(notes,D);
+}
 /* ============ 채보 생성 ============ */
 function buildChart(song,diffKey){
  const D=DIFFS[diffKey];const beat=60/song.bpm;const notes=[];
  const push=(lane,time,dur,kind)=>notes.push({lane,time,dur:dur||0,kind,judged:false,holdState:kind==='hold'?'wait':null,tailJudged:false});
+ if(song._onsets&&song._onsets.length)return buildFromOnsets(song,D,diffKey); // 분석 채보 우선
  if(song.isCustom||song.isStream||song.isYT){
   // 커스텀/스트리밍: 계단 흐름 위주 — 같은 방향으로 이어가다 벽에서 반사
   const totalBeats=Math.floor(song.durSec/beat);
@@ -456,20 +577,20 @@ function buildChart(song,diffKey){
     if(sr<0.35&&dir!==0)step=dir; // 계단 이어가기
     else if(sr<0.55){dir=Math.random()<0.5?-1:1;step=dir} // 새 계단
     else{dir=0;step=[-2,-1,1,2][Math.floor(Math.random()*4)]}
-    lane=Math.max(0,Math.min(3,lane+step));
-    if(lane===0||lane===3)dir=-dir; // 벽 반사
+    lane=Math.max(0,Math.min(LANES-1,lane+step));
+    if(lane===0||lane===LANES-1)dir=-dir; // 벽 반사
     const t=b*beat;const r=Math.random();
     let kind='tap';
     if(D.hold&&r<0.12)kind='hold';
     else if(D.flick&&r<0.12+D.flickRate)kind='flick';
     push(lane,t,kind==='hold'?beat*2:0,kind);
-    if(b%8===0&&D.doubleRate>=0.2)push(3-lane,t,0,'tap'); // 강박 거울 동시치기
-    else if(Math.random()<D.doubleRate*0.5)push(3-lane,t,0,'tap');
+    if(b%8===0&&D.doubleRate>=0.2)push(LANES-1-lane,t,0,'tap'); // 강박 거울 동시치기
+    else if(Math.random()<D.doubleRate*0.5)push(LANES-1-lane,t,0,'tap');
     // 클라이막스 연타: 박 후반부 16분 추가타 (타타타타!)
     if(D.rush&&(b%16)>=10&&Math.random()<D.rushRate){
      let rl=lane+(dir!==0?dir:(Math.random()<0.5?1:-1));
-     if(rl<0||rl>3)rl=3-lane;
-     if(rl===lane)rl=(lane+2)%4;
+     if(rl<0||rl>LANES-1)rl=LANES-1-lane;
+     if(rl===lane)rl=(lane+2)%LANES;
      push(rl,t+beat*0.5,0,'tap');
     }
    }
@@ -482,7 +603,7 @@ function buildChart(song,diffKey){
   const steps=Math.floor(totalDur/(beat*stepBeat));
   const pits=song.melody.filter(m=>m>0);
   const lo=Math.min(...pits),hi=Math.max(...pits);
-  const pitchLane=m=>Math.max(0,Math.min(3,Math.round((m-lo)/((hi-lo)||1)*3)));
+  const pitchLane=m=>Math.max(0,Math.min(LANES-1,Math.round((m-lo)/((hi-lo)||1)*(LANES-1))));
   let s=8,barCount=0,prevLane=2; // 앞 4박 여유
   while(s<steps-8){
    const mel=song.melody[s%loopLen];
@@ -495,12 +616,12 @@ function buildChart(song,diffKey){
     while(run<8&&song.melody[(s+run)%loopLen]===mel)run++;
     if(run>=3&&D.hold){
      push(lane,time,Math.min(4,run)*stepBeat*beat,'hold');
-     if(barPos===0&&Math.random()<D.doubleRate*0.5)push(3-lane,time,0,'tap');
+     if(barPos===0&&Math.random()<D.doubleRate*0.5)push(LANES-1-lane,time,0,'tap');
      prevLane=lane;s+=run;continue;
     }
     // 마디 첫박: 거울 동시치기 — 예쁜 대칭 점프
     if(barPos===0&&D.doubleRate>0&&Math.random()<D.doubleRate+0.15){
-     const pair=(barCount%2===0)?[0,3]:[1,2];
+     const pair=(barCount%2===0)?[0,LANES-1]:[1,LANES-2];
      push(pair[0],time,0,'tap');push(pair[1],time,0,'tap');
      barCount++;prevLane=pair[1];s++;continue;
     }
@@ -517,18 +638,18 @@ function buildChart(song,diffKey){
     if(diffKey==='EASY'&&barPos%2===1)p*=0.4;
     if(Math.random()<p||barPos%4===0){
      let l=lane;
-     if(Math.random()<0.12)l=Math.max(0,Math.min(3,lane+(Math.random()<0.5?-1:1))); // 살짝 흔들기
+     if(Math.random()<0.12)l=Math.max(0,Math.min(LANES-1,lane+(Math.random()<0.5?-1:1))); // 살짝 흔들기
      push(l,time,0,kind);
-     if(barPos%8===4&&Math.random()<D.doubleRate)push((lane+2)%4,time,0,'tap');
+     if(barPos%8===4&&Math.random()<D.doubleRate)push((lane+2)%LANES,time,0,'tap');
     }
-    if((diffKey==='EXPERT'||diffKey==='MASTER')&&barPos===8&&Math.random()<0.4)push((lane+1)%4,time,0,'tap');
+    if((diffKey==='EXPERT'||diffKey==='MASTER')&&barPos===8&&Math.random()<0.4)push((lane+1)%LANES,time,0,'tap');
     // 클라이막스 연타 (HARD+: 멜로디 뒤에 붙는 16분 추가타 — 타타타타! MASTER는 구간 확대)
     if(D.rush&&(s%64)>=(diffKey==='MASTER'?32:40)&&Math.random()<D.rushRate){
      let rd=lane-prevLane;
      rd=rd===0?(Math.random()<0.5?1:-1):Math.max(-1,Math.min(1,rd));
      let rl=lane+rd;
-     if(rl<0||rl>3)rl=3-lane;
-     if(rl===lane)rl=(lane+2)%4;
+     if(rl<0||rl>LANES-1)rl=LANES-1-lane;
+     if(rl===lane)rl=(lane+2)%LANES;
      push(rl,time+stepBeat*beat*0.5,0,((diffKey==='EXPERT'||diffKey==='MASTER')&&Math.random()<0.12)?'flick':'tap');
     }
     prevLane=lane;
@@ -536,15 +657,16 @@ function buildChart(song,diffKey){
    }else{
     // 쉼표: 킥 박자에 베이스 노트 (리듬 뼈대)
     if(barPos%4===0&&Math.random()<D.mult*0.5){
-     push([1,2,0,3][barCount%4],time,0,'tap');
+     push([1,2,0,LANES-1][barCount%4],time,0,'tap');
     }else if(D.streamRate>0&&barPos%2===1&&Math.random()<D.streamRate){
-     push(Math.floor(Math.random()*4),time,0,Math.random()<D.flickRate?'flick':'tap');
+     push(Math.floor(Math.random()*LANES),time,0,Math.random()<D.flickRate?'flick':'tap');
     }
     s++;
    }
    }
   }
- notes.sort((a,b)=>a.time-b.time);
+function filterNotes(arr,D){
+ const notes=[...arr].sort((a,b)=>a.time-b.time);
  // 최소 간격 필터: 같은 레인 minGap, 전체 globalGap 미만 노트 제거
  // (같은 레인 동시각 중복은 무조건 제거, 다른 레인 동시치기는 유지)
  const out=[];const lastLane={};const blocked={};let lastAny=-9;
@@ -561,6 +683,8 @@ function buildChart(song,diffKey){
   blocked[n.lane]=n.kind==='hold'?n.time+n.dur+0.10:n.time+0.03; // 홀드 꼬리+재입력 여유 확보
  }
  return out;
+}
+return filterNotes(notes,D);
 }
 
 /* 음악 스케줄링 (내장곡) */
@@ -596,7 +720,20 @@ function fitCanvas(){
  ctx.setTransform(DPR,0,0,DPR,0,0);
 }
 addEventListener('resize',()=>{if(!document.getElementById('game-screen').classList.contains('hidden'))fitCanvas()});
-const LANES=4,KEYS=['d','f','j','k'];
+let LANES=4,KEYMODE=4;
+const KEYS4=['d','f','j','k'],KEYS6=['s','d','f','j','k','l'];
+let KEYS=KEYS4;
+const KEYMAPS={4:{d:0,f:1,' ':1,j:2,k:3},6:{s:0,d:1,f:2,' ':2,j:3,k:4,l:5}};
+let keyToLane=KEYMAPS[4];
+const KEYHINTS={4:[['D',1],['F',2],['J',3],['K',4]],6:[['S',1],['D',2],['F',3],['J',4],['K',5],['L',6]]};
+function setKeyMode(m){
+ KEYMODE=(m===6)?6:4;LANES=KEYMODE;KEYS=KEYMODE===6?KEYS6:KEYS4;keyToLane=KEYMAPS[KEYMODE];
+ try{localStorage.setItem('prs_keys',String(KEYMODE))}catch(e){}
+ document.querySelectorAll('.key-btn').forEach(b=>b.classList.toggle('active',+b.dataset.keys===KEYMODE));
+ const kh=document.getElementById('keyHint');
+ if(kh)kh.innerHTML=KEYHINTS[KEYMODE].map(k=>`<span><kbd>${k[0]}</kbd> ${k[1]}</span>`).join('')+(KEYMODE===4?'<span style="margin-left:8px">스페이스도 2번</span>':'<span style="margin-left:8px">스페이스도 3번</span>');
+}
+setKeyMode(parseInt((()=>{try{return localStorage.getItem('prs_keys')}catch(e){return '4'}})()||'4')||4);
 let notes=[],songStart=0,songPlaying=false,raf=0,lastFrameT=0,cdTimer=null;
 let score=0,combo=0,maxCombo=0,life=100,counts={perfect:0,great:0,good:0,miss:0};
 let speed=5,autoPlay=false,isCustomPlaying=false,customBuffer=null,customSource=null;
@@ -720,6 +857,18 @@ async function startGame(){
   song.ok=true;
  }
  notes=((song.isStream||song.isYT)&&!song.durSec)?[]:buildChart(song,selectedDiff); // 스트리밍곡은 길이 확정 후 생성
+ // 음악 싱크 채보: 파형 분석 (URL/업로드 버퍼 → 온셋, 실패하면 박자 그리드 폴백)
+ if((song.isStream||song.isCustom)&&!song._onsets){
+  const cd0=document.getElementById('countdown');
+  cd0.classList.remove('hidden');cd0.textContent='🎼 채보 분석중...';
+  try{
+   let ab=null;
+   if(song.isCustom&&customBuffer)ab=customBuffer;
+   else{const res=await fetch(song.url,{mode:'cors'});if(!res.ok)throw new Error('http '+res.status);ab=await audio().decodeAudioData(await res.arrayBuffer());}
+   const an=analyzeBuffer(ab,song.bpm);
+   if(an.onsets.length>=10){song._onsets=an.onsets;notes=buildChart(song,selectedDiff)}
+  }catch(e){/* 폴백: 랜덤 그리드 채보 유지 */}
+ }
  score=0;combo=0;maxCombo=0;life=100;counts={perfect:0,great:0,good:0,miss:0};
  effects=[];paused=false;
  // 카운트다운 3,2,1 (중복 시작 방지)
@@ -851,8 +1000,7 @@ document.getElementById('fsBtn').onclick=()=>{
 };
 document.addEventListener('fullscreenchange',()=>{fitCanvas()});
 
-/* ============ 입력 ============ */
-const keyToLane={d:0,f:1,' ':1,j:2,k:3};
+/* ============ 입력 (keyToLane은 키모드 설정에서 관리) ============ */
 const flickDown={}; // 키보드 플릭용: 레인별 키 누른 시각
 addEventListener('keydown',e=>{
  if(document.getElementById('game-screen').classList.contains('hidden'))return;
@@ -876,12 +1024,12 @@ addEventListener('keyup',e=>{
 function canvasLaneFromEvent(e){
  const r=cv.getBoundingClientRect();
  const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
- return Math.max(0,Math.min(3,Math.floor(x/r.width*4)));
+ return Math.max(0,Math.min(LANES-1,Math.floor(x/r.width*LANES)));
 }
 const touchMap={}; // 멀티터치 대응: pointerId별 {lane, 시작Y, 시작시각}
 cv.addEventListener('pointerdown',e=>{
  const r=cv.getBoundingClientRect();
- const l=Math.max(0,Math.min(3,Math.floor((e.clientX-r.left)/r.width*4)));
+ const l=Math.max(0,Math.min(LANES-1,Math.floor((e.clientX-r.left)/r.width*LANES)));
  touchMap[e.pointerId]={lane:l,y:e.clientY,t:performance.now()};
  holdOn(l);holdMap[e.pointerId]=l;
  pressLane(l); // 탭/홀드만 판정 (플릭은 스와이프해야 맞음)
@@ -1067,6 +1215,13 @@ function perspP(dt,scrollWin){return Math.max(0,Math.min(1.15,1-dt/scrollWin))}
 function perspE(p){return Math.pow(Math.min(Math.max(p,0),1.05),1.7)}
 function perspS(p){return 0.30+0.70*Math.pow(Math.min(Math.max(p,0),1.05),1.15)}
 function laneXat(lane,W,laneW,p){const cx=W/2;const w=0.25+0.75*Math.min(Math.max(p,0),1.08);return cx+((lane*laneW+laneW/2)-cx)*w}
+// 홀드 꼬리까지 화면에 유지 (머리만 보고 자르면 긴 홀드가 중간에 사라짐)
+function noteVisible(n,t,scrollWin){
+ const dtn=n.time-t;
+ if(dtn>scrollWin+0.15)return false;
+ const endT=n.kind==='hold'?n.time+(n.dur||0):n.time;
+ return endT-t>=-0.6;
+}
 function draw(t,frameDt){
  const W=cv.clientWidth||560,H=cv.clientHeight||700;
  const dtF=frameDt||0.016;
@@ -1143,7 +1298,7 @@ function draw(t,frameDt){
  const noteW=Math.min(laneW*0.86,170); // 노트 막대 너비 (가로 모드 상한)
  for(const n of notes){
   const dtn=n.time-t;
-  if(dtn>scrollWin+0.15||dtn<-0.6)continue;
+  if(!noteVisible(n,t,scrollWin))continue;
   const pp=perspP(dtn,scrollWin); // 원근 진행도
   const y=topY+(judgeY-topY)*perspE(pp);
   const ps=perspS(pp); // 원근 크기
