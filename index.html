@@ -136,7 +136,7 @@ input[type=range]{accent-color:#ffcb05}
     🎺=원곡 스트리밍(인터넷 필요) • ⚡🎤=네 로컬 mp3. 박자가 어긋나면 곡을 고른 뒤 ⚙ BPM 버튼으로 조절<br>
     ※ 스트리밍 음원은 archive.org에서 재생되며 레포에 포함되지 않습니다. 본인 소장 mp3는 📁 버튼으로 직접 업로드 가능 (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 21곡 + 내 MP3 2곡 • URL/로컬 재생(레포 미포함) • v3.5</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 21곡 + 내 MP3 2곡 • URL/로컬 재생(레포 미포함) • v3.6</div>
 </div>
 
 <!-- 게임 -->
@@ -275,6 +275,13 @@ const STREAMS=[
 ];
 let streamEl=null;
 function getStream(){if(!streamEl){streamEl=new Audio();streamEl.preload='auto'}return streamEl}
+// 드라이브는 COEP require-corp 응답이라 CORS 모드로 불러야 브라우저가 허용 (ACAO:* 있음)
+function setCors(el,url){
+ try{
+  if(/drive\.google\.com|drive\.usercontent\.google\.com/i.test(url||''))el.crossOrigin='anonymous';
+  else el.removeAttribute('crossorigin');
+ }catch(e){}
+}
 function streamCandidates(song){
  // 파일명 추측이 틀렸을 경우 대비: _vbr 접미 / 평탄 구조 변형도 자동 시도
  const u=song.url;
@@ -302,11 +309,11 @@ function ensureStream(song){
   const onErr=()=>{
    i++;
    if(i>=urls.length){cleanup();reject(new Error('404/load failed: '+urls[0]))}
-   else{el.src=urls[i];el.load()}
+   else{setCors(el,urls[i]);el.src=urls[i];el.load()}
   };
   el.addEventListener('canplaythrough',onOk);
   el.addEventListener('error',onErr);
-  el.src=urls[0];el.load();
+  setCors(el,urls[0]);el.src=urls[0];el.load();
   if(el.readyState>=3)onOk();
  });
 }
@@ -366,12 +373,12 @@ STREAMS.forEach(s=>{ // 별도 프로브로 각 URL 로드 가능 여부+재생 
   let i=0;
   const probe=new Audio();probe.preload='auto';
   probe.addEventListener('canplaythrough',()=>{s.ok=true;s.url=probe.src;s.durSec=s.durSec||Math.floor(probe.duration||0);renderSongs()});
-  probe.addEventListener('error',()=>{
-   i++;
-   if(i>=urls.length){s.ok=false;renderSongs()}
-   else{probe.src=urls[i];probe.load()}
-  });
-  probe.src=urls[0];probe.load();
+   probe.addEventListener('error',()=>{
+    i++;
+    if(i>=urls.length){s.ok=false;renderSongs()}
+    else{setCors(probe,urls[i]);probe.src=urls[i];probe.load()}
+   });
+   setCors(probe,urls[0]);probe.src=urls[0];probe.load();
  }catch(e){s.ok=false}
 });
 document.querySelectorAll('.diff-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.diff-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedDiff=b.dataset.diff;updateDiffInfo()});
