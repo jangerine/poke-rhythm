@@ -71,6 +71,7 @@ label.opt{font-size:13px;color:#cbd5e1;display:flex;align-items:center;gap:8px;b
 #comboText{font-weight:900;color:#ffcb05}
 #gameWrap{position:relative;width:100%;flex:1;display:flex;justify-content:center}
 canvas#game{width:100%;height:100vh;height:100dvh;background:rgba(0,0,0,.35);touch-action:none;display:block}
+#ytWrap iframe{width:160px;height:90px;border:none}
  #judgePopup{position:absolute;top:62%;left:50%;transform:translateX(-50%);font-weight:900;font-size:30px;pointer-events:none;text-shadow:0 2px 12px #000,0 0 24px rgba(255,255,255,.25);will-change:transform;white-space:nowrap}
 #countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:90px;font-weight:900;text-shadow:0 4px 30px #000}
 /* 판정 색 */
@@ -97,7 +98,7 @@ input[type=range]{accent-color:#ffcb05}
 <div id="select-screen" class="screen">
   <div class="pokeball"></div>
   <div class="title"><span>포케리듬</span><br>프세카풍 리듬게임</div>
-  <div class="subtitle">⚡ 4레인 낙하형 • 탭 / 홀드 / 플릭 • 원곡 스트리밍 21곡 + 내 MP3 2곡</div>
+  <div class="subtitle">⚡ 4레인 낙하형 • 탭 / 홀드 / 플릭 • 원곡 스트리밍 21곡 + 내 MP3 2곡 + YT 1곡</div>
   <div id="songList"></div>
   <div class="diff-row" id="diffRow">
     <button class="diff-btn" data-diff="EASY">EASY<span class="lv">Lv.5 ★★★★★</span></button>
@@ -132,10 +133,10 @@ input[type=range]{accent-color:#ffcb05}
     모바일: 레인 터치 / 플릭노트는 위로 쓸어올리기 필수<br>
     🟦 파랑 네모 막대 = 탭 &nbsp; 🟢 초록 긴바 = 홀드(끝까지 누르고 있기) &nbsp; 🟥 빨강 화살막대 = 플릭 — 모바일은 위로 쓸어올리기, 키보드는 짧게 끊어치듯 눌렀다 떼기 (그냥 누르기만 하면 MISS!)<br>
     판정: PERFECT ±45ms / GREAT ±90ms / GOOD ±130ms<br>
-    🎺=원곡 스트리밍(인터넷 필요) • ⚡🎤=네 로컬 mp3. 박자가 어긋나면 곡을 고른 뒤 ⚙ BPM 버튼으로 조절<br>
+    🎺=원곡 스트리밍(인터넷 필요) • ⚡🎤=네 로컬 mp3 • 📺=유튜브 재생(판정 여유, 시작 안 되면 탭 버튼). 박자가 어긋나면 곡을 고른 뒤 ⚙ BPM 버튼으로 조절<br>
     ※ 스트리밍 음원은 archive.org에서 재생되며 레포에 포함되지 않습니다. 본인 소장 mp3는 📁 버튼으로 직접 업로드 가능 (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 21곡 + 내 MP3 2곡 • URL/로컬 재생(레포 미포함) • v3.3</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 21곡 + YT 1곡 + 내 MP3 2곡 • URL/로컬 재생(레포 미포함) • v3.4</div>
 </div>
 
 <!-- 게임 -->
@@ -157,6 +158,8 @@ input[type=range]{accent-color:#ffcb05}
       <button class="btn-sub" id="retryBtn2" style="min-width:220px">🔁 다시하기</button>
       <button class="btn-sub" id="lobbyBtn" style="min-width:220px">🏠 로비로</button>
     </div>
+    <div id="ytWrap" class="hidden" style="position:absolute;right:8px;bottom:8px;z-index:6;opacity:.92;border:2px solid #ffffff33;border-radius:10px;overflow:hidden;line-height:0"><div id="ytPlayer"></div></div>
+    <div id="ytTap" class="hidden" style="position:absolute;inset:0;z-index:11;display:flex;align-items:center;justify-content:center;background:rgba(5,5,20,.6)"><button class="btn btn-play" id="ytTapBtn" style="font-size:22px">▶ 탭해서 재생</button></div>
   </div>
   <div id="keyHint"><span><kbd>D</kbd> 1</span><span><kbd>F</kbd> 2</span><span><kbd>J</kbd> 3</span><span><kbd>K</kbd> 4</span><span style="margin-left:8px">스페이스도 2번</span></div>
 </div>
@@ -263,6 +266,8 @@ const STREAMS=[
  {id:56,emoji:'💿',title:'Route 1 (Masuda ver.)',sub:'드라이브 직링크 • Junichi Masuda (57초)',bpm:140,isStream:true,
   url:'https://drive.google.com/uc?export=download&id=1p_3K8io5-brSL39kEzGHutf2URvz6ayw',
   jacket:'linear-gradient(135deg,#4ade80,#1e3a8a)',durSec:0},
+ {id:60,emoji:'📺',title:'한 남자 이야기 [YT]',sub:'YOUNG • 유튜브 재생 (판정 여유)',bpm:120,loose:true,isYT:true,ytId:'ZWgGoz6N9qM',
+  jacket:'linear-gradient(135deg,#0f172a,#7c3aed)',durSec:0},
  {id:30,emoji:'⚡',title:'피카츄알',sub:'로컬 mp3 • 네 파일! (30초)',bpm:140,isStream:true,
   url:'music/'+encodeURI('피카츄🐁알🪺깠는데 피츄나왔죠🤯.mp3'),
   jacket:'linear-gradient(135deg,#facc15,#f97316)',durSec:0},
@@ -326,6 +331,11 @@ function diffNum(song,diffKey){
 }
 const LV_COL={EASY:'#4ade80',NORMAL:'#60a5fa',HARD:'#fb923c',EXPERT:'#f43f5e'};
 const LV_SHORT={EASY:'E',NORMAL:'N',HARD:'H',EXPERT:'EX'};
+function songBadge(s){
+ if(s.ytId)return '▶ YT';
+ if(s.isStream)return (s.durSec?s.durSec+'s • ':'')+'원곡 STREAM '+(s.ok===true?'✅':s.ok===false?'❌ URL 확인!':'');
+ return s.durSec?s.durSec+'s':'LIVE';
+}
 function updateDiffNums(){
  document.querySelectorAll('.diff-btn').forEach(b=>{
   const lv=b.querySelector('.lv');
@@ -346,12 +356,13 @@ function renderSongs(){
  const all=[...SONGS,...STREAMS];if(customSong)all.push(customSong);
  all.forEach(s=>{
   const d=document.createElement('div');d.className='song-card'+(selectedSong.id===s.id?' selected':'');
-   d.innerHTML=`<div class="song-jacket" style="background:${s.jacket}">${s.emoji}</div><div class="song-title">${s.title}</div><div class="song-meta">${s.sub}</div><span class="song-bpm">♫ ${s.bpm} BPM • ${s.isStream?((s.durSec?s.durSec+'s • ':'')+'원곡 STREAM '+(s.ok===true?'✅':s.ok===false?'❌ URL 확인!':'')):s.durSec?s.durSec+'s':'LIVE'}</span><div style="margin-top:6px;font-size:12px;font-weight:800;display:flex;gap:10px;justify-content:center">${['EASY','NORMAL','HARD','EXPERT'].map(dd=>`<span style="color:${LV_COL[dd]}">${LV_SHORT[dd]} ${diffNum(s,dd)}</span>`).join('')}</div>`;
+   d.innerHTML=`<div class="song-jacket" style="background:${s.jacket}">${s.emoji}</div><div class="song-title">${s.title}</div><div class="song-meta">${s.sub}</div><span class="song-bpm">♫ ${s.bpm} BPM • ${songBadge(s)}</span><div style="margin-top:6px;font-size:12px;font-weight:800;display:flex;gap:10px;justify-content:center">${['EASY','NORMAL','HARD','EXPERT'].map(dd=>`<span style="color:${LV_COL[dd]}">${LV_SHORT[dd]} ${diffNum(s,dd)}</span>`).join('')}</div>`;
   d.onclick=()=>{selectedSong=s;renderSongs();updateDiffInfo()};songListEl.appendChild(d);
  });
 }
 renderSongs();updateDiffInfo();
 STREAMS.forEach(s=>{ // 별도 프로브로 각 URL 로드 가능 여부+재생 시간 확인 (카드에 ✅/❌ 표시, 성공한 URL로 자동 교체)
+ if(s.ytId)return; // 유튜브곡은 API로 확인하므로 오디오 프로브 제외
  try{
   const urls=streamCandidates(s);
   let i=0;
@@ -443,7 +454,7 @@ function hitSE(ok){const ac=audio();const o=ac.createOscillator(),g=ac.createGai
 function buildChart(song,diffKey){
  const D=DIFFS[diffKey];const beat=60/song.bpm;const notes=[];
  const push=(lane,time,dur,kind)=>notes.push({lane,time,dur:dur||0,kind,judged:false,holdState:kind==='hold'?'wait':null,tailJudged:false});
- if(song.isCustom||song.isStream){
+ if(song.isCustom||song.isStream||song.isYT){
   // 커스텀/스트리밍: 계단 흐름 위주 — 같은 방향으로 이어가다 벽에서 반사
   const totalBeats=Math.floor(song.durSec/beat);
   let lane=2,dir=0;
@@ -631,6 +642,68 @@ function scrollSecFor(){const H=cv.clientHeight||Math.max(400,Math.min(900,windo
 document.getElementById('speed').oninput=e=>{speed=+e.target.value;document.getElementById('speedVal').textContent=speed.toFixed(1)};
 document.getElementById('auto').onchange=e=>autoPlay=e.target.checked;
 
+/* ============ 유튜브 음원 (차단망 우회용: iframe + 앵커 시계) ============ */
+let ytApiPromise=null,ytPlayer=null,ytAnchor=null,ytFrame=0,ytStarted=false,ytWatchdog=null;
+function loadYTApi(){
+ if(ytApiPromise)return ytApiPromise;
+ ytApiPromise=new Promise((resolve,reject)=>{
+  if(window.YT&&window.YT.Player){resolve();return}
+  const to=setTimeout(()=>reject(new Error('youtube api timeout')),15000);
+  window.onYouTubeIframeAPIReady=()=>{clearTimeout(to);resolve()};
+  const tag=document.createElement('script');
+  tag.src='https://www.youtube.com/iframe_api';
+  tag.onerror=()=>{clearTimeout(to);reject(new Error('youtube api load failed'))};
+  document.head.appendChild(tag);
+ });
+ return ytApiPromise;
+}
+function ensureYT(song){
+ return loadYTApi().then(()=>new Promise((resolve,reject)=>{
+  try{
+   if(!ytPlayer){
+    ytPlayer=new window.YT.Player('ytPlayer',{width:160,height:90,videoId:song.ytId,playerVars:{playsinline:1,rel:0,modestbranding:1,controls:0,disablekb:1},events:{onStateChange:onYTState}});
+   }else if(ytPlayer.getVideoData&&ytPlayer.getVideoData().video_id!==song.ytId){
+    ytPlayer.loadVideoById(song.ytId);
+   }
+  }catch(e){reject(e);return}
+  const t0=performance.now();
+  const wait=()=>{
+   try{
+    const d=ytPlayer.getDuration&&ytPlayer.getDuration();
+    if(d>0){song.durSec=song.durSec||Math.floor(d);song.ok=true;resolve();return}
+   }catch(e){}
+   if(performance.now()-t0>15000){reject(new Error('youtube duration timeout'));return}
+   setTimeout(wait,300);
+  };
+  wait();
+ }));
+}
+function onYTState(e){
+ const YT=window.YT;
+ if(!YT)return;
+ if(e.data===YT.PlayerState.PLAYING){
+  document.getElementById('ytTap').classList.add('hidden');
+  if(selectedSong&&selectedSong.isYT&&!ytStarted){
+   ytStarted=true;
+   ytAnchor={acT:audio().currentTime,ytT:0};
+   try{ytAnchor.ytT=ytPlayer.getCurrentTime()}catch(err){}
+   songPlaying=true;lastFrameT=0;
+   cancelAnimationFrame(raf);loop();
+  }else{
+   ytReanchor();
+  }
+ }
+ if(e.data===YT.PlayerState.ENDED){
+  if(selectedSong&&selectedSong.isYT&&songPlaying){endSong()}
+ }
+}
+function ytNow(){
+ if(!ytAnchor)return 0;
+ return ytAnchor.ytT+(audio().currentTime-ytAnchor.acT);
+}
+function ytReanchor(){
+ try{if(ytPlayer&&ytPlayer.getCurrentTime)ytAnchor={acT:audio().currentTime,ytT:ytPlayer.getCurrentTime()}}catch(e){}
+}
 function showScreen(id){['select-screen','game-screen','result-screen'].forEach(s=>document.getElementById(s).classList.add('hidden'));document.getElementById(id).classList.remove('hidden')}
 
 async function startGame(){
@@ -647,7 +720,15 @@ async function startGame(){
   catch(e){cd0.classList.add('hidden');song.ok=false;alert('😢 원곡 로드 실패!\nURL이 잘못됐거나 archive.org에 접속할 수 없어.\n('+e.message+')');showScreen('select-screen');return}
   song.ok=true;
  }
- notes=(song.isStream&&!song.durSec)?[]:buildChart(song,selectedDiff); // 스트리밍곡은 길이 확정 후 생성
+ if(song.isYT){
+  const cd0=document.getElementById('countdown');
+  cd0.classList.remove('hidden');cd0.textContent='📺 유튜브 로딩중...';
+  document.getElementById('ytWrap').classList.remove('hidden');
+  try{await ensureYT(song)}
+  catch(e){cd0.classList.add('hidden');document.getElementById('ytWrap').classList.add('hidden');song.ok=false;alert('😢 유튜브 로드 실패!\n유튜브에 접속할 수 없어.\n('+e.message+')');showScreen('select-screen');return}
+  song.ok=true;
+ }
+ notes=((song.isStream||song.isYT)&&!song.durSec)?[]:buildChart(song,selectedDiff); // 스트리밍곡은 길이 확정 후 생성
  score=0;combo=0;maxCombo=0;life=100;counts={perfect:0,great:0,good:0,miss:0};
  effects=[];paused=false;
  // 카운트다운 3,2,1 (중복 시작 방지)
@@ -673,6 +754,22 @@ async function beginSong(song){
   cancelAnimationFrame(raf);loop();
   return;
  }
+ if(song.isYT){
+  if(!notes.length)notes=buildChart(song,selectedDiff);
+  document.getElementById('ytWrap').classList.remove('hidden');
+  ytStarted=false;ytAnchor=null;ytFrame=0;
+  try{
+   if(ytPlayer.getVideoData&&ytPlayer.getVideoData().video_id!==song.ytId)ytPlayer.loadVideoById(song.ytId);
+   else ytPlayer.seekTo(0,true);
+  }catch(e){}
+  try{ytPlayer.playVideo()}catch(e){}
+  // 재생 시작 감시: 자동재생이 막히면 탭 버튼 표시 (직접 제스처로 재생)
+  clearTimeout(ytWatchdog);
+  ytWatchdog=setTimeout(()=>{
+   if(!ytStarted){document.getElementById('ytTap').classList.remove('hidden')}
+  },3000);
+  return; // PLAYING 이벤트에서 loop 시작
+ }
  if(song.isCustom&&customBuffer){
   customSource=ac.createBufferSource();customSource.buffer=customBuffer;customSource.connect(master);
   customSource.start(songStart);
@@ -684,12 +781,16 @@ async function beginSong(song){
  songPlaying=true;lastFrameT=0;
  cancelAnimationFrame(raf);loop();
 }
-function songTime(){return audio().currentTime-songStart-globalOffsetMs/1000} // 오프셋 보정 적용
+function songTime(){if(selectedSong&&selectedSong.isYT&&ytPlayer)return ytNow();return audio().currentTime-songStart-globalOffsetMs/1000} // 오프셋 보정 적용
 function stopSong(){
  if(cdTimer){clearInterval(cdTimer);cdTimer=null}
  songPlaying=false;cancelAnimationFrame(raf);
  if(customSource){try{customSource.stop()}catch(e){}customSource=null}
  try{if(streamEl)streamEl.pause()}catch(e){}
+ try{if(ytPlayer&&ytPlayer.stopVideo)ytPlayer.stopVideo()}catch(e){}
+ ytAnchor=null;ytStarted=false;clearTimeout(ytWatchdog);
+ document.getElementById('ytWrap').classList.add('hidden');
+ document.getElementById('ytTap').classList.add('hidden');
  if(audio().state==='suspended')audio().resume();
  paused=false;
  document.getElementById('pauseBtn').textContent='⏸';
@@ -726,7 +827,8 @@ document.getElementById('backBtn').onclick=()=>showScreen('select-screen');
 function pauseGame(){
  if(!songPlaying||paused)return;
  paused=true;pauseTime=audio().currentTime;
- if(selectedSong.isStream){try{getStream().pause()}catch(e){}}
+ if(selectedSong.isYT){try{ytPlayer.pauseVideo()}catch(e){}}
+ else if(selectedSong.isStream){try{getStream().pause()}catch(e){}}
  audio().suspend();
  document.getElementById('pauseBtn').textContent='▶';
  document.getElementById('pauseMenu').classList.remove('hidden');
@@ -734,7 +836,8 @@ function pauseGame(){
 function resumeGame(){
  if(!songPlaying||!paused)return;
  paused=false;
- if(selectedSong.isStream){try{getStream().play()}catch(e){}}
+ if(selectedSong.isYT){try{ytPlayer.playVideo()}catch(e){}ytReanchor()}
+ else if(selectedSong.isStream){try{getStream().play()}catch(e){}}
  audio().resume();
  document.getElementById('pauseBtn').textContent='⏸';
  document.getElementById('pauseMenu').classList.add('hidden');
@@ -743,6 +846,7 @@ document.getElementById('pauseBtn').onclick=()=>{paused?resumeGame():pauseGame()
 document.getElementById('resumeBtn').onclick=resumeGame;
 document.getElementById('retryBtn2').onclick=()=>{stopSong();startGame()};
 document.getElementById('lobbyBtn').onclick=()=>{stopSong();showScreen('select-screen')};
+document.getElementById('ytTapBtn').onclick=()=>{try{ytPlayer.playVideo()}catch(e){}};
 document.getElementById('fsBtn').onclick=()=>{
  try{
   if(document.fullscreenElement)document.exitFullscreen();
@@ -836,7 +940,8 @@ function tryFlick(lane){
  const j=judgeWindow(dt);
  if(j)hitNote(note,j,lane);
 }
-function judgeWindow(dt){const a=Math.abs(dt);if(a<=0.045)return'perfect';if(a<=0.09)return'great';if(a<=0.13)return'good';return null}
+function missLimit(){return (selectedSong&&selectedSong.loose)?0.17:0.13}
+function judgeWindow(dt){const a=Math.abs(dt);const w=(selectedSong&&selectedSong.loose)?[0.07,0.12,0.17]:[0.045,0.09,0.13];if(a<=w[0])return'perfect';if(a<=w[1])return'great';if(a<=w[2])return'good';return null}
 function pressLane(lane){
  laneFlash[lane]=1;
  if(!songPlaying||paused)return;
@@ -906,6 +1011,11 @@ function loop(){
  const frameDt=Math.min(0.05,lastFrameT?(nowMs-lastFrameT)/1000:0.016); // 프레임 독립 감쇠용 (60/120Hz 동일)
  lastFrameT=nowMs;
  const t=songTime();
+ if(selectedSong&&selectedSong.isYT){
+  ytFrame++;
+  if(ytFrame%20===0)ytReanchor(); // 드리프트 보정
+  try{if(ytPlayer&&ytPlayer.getPlayerState&&ytPlayer.getPlayerState()===0){endSong();return}}catch(e){}
+ }
  // 오토플레이
  if(autoPlay){
   for(const n of notes){
@@ -922,8 +1032,8 @@ function loop(){
      n.holdState='done';n.tailJudged=true;combo=0;counts.miss++;life=Math.max(0,life-8);popup('miss');hitSE(false);
     }
    }
-  if(!n.judged&&n.kind!=='hold'&&t-n.time>0.13){n.judged=true;combo=0;counts.miss++;life=Math.max(0,life-8);popup('miss');hitSE(false)}
-  if(n.kind==='hold'&&!n.judged&&t-n.time>0.13){n.judged=true;n.holdState='done';n.tailJudged=true;combo=0;counts.miss++;life=Math.max(0,life-8);popup('miss')}
+  if(!n.judged&&n.kind!=='hold'&&t-n.time>missLimit()){n.judged=true;combo=0;counts.miss++;life=Math.max(0,life-8);popup('miss');hitSE(false)}
+  if(n.kind==='hold'&&!n.judged&&t-n.time>missLimit()){n.judged=true;n.holdState='done';n.tailJudged=true;combo=0;counts.miss++;life=Math.max(0,life-8);popup('miss')}
  }
  // 라이프 0이어도 끝까지 (프세카처럼 버티기 가능)
  // 종료 체크
