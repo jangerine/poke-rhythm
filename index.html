@@ -135,7 +135,7 @@ input[type=range]{accent-color:#ffcb05}
     🎺 전곡 원곡 스트리밍(인터넷 필요). 박자가 어긋나면 곡을 고른 뒤 ⚙ BPM 버튼으로 조절<br>
     ※ 스트리밍 음원은 archive.org에서 재생되며 레포에 포함되지 않습니다. 본인 소장 mp3는 📁 버튼으로 직접 업로드 가능 (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 6곡 • URL 재생(레포 미포함) • v2.1</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 6곡 • URL 재생(레포 미포함) • v2.2</div>
 </div>
 
 <!-- 게임 -->
@@ -233,15 +233,31 @@ let selectedSong=STREAMS[0];
 let selectedDiff='NORMAL';
 // 4단계 난이도: 밀도(mult), 최소 간격, 동시치기/플릭/연타 확률로 명확히 차별화
 const DIFFS={
- EASY:{mult:0.70,name:'EASY',level:5,minGap:0.24,globalGap:0.14,hold:true,flick:true,flickRate:0.10,doubleRate:0.12,streamRate:0,rush:false,rushRate:0,desc:'입문용 • 템포 업! 가끔 플릭+동시치기'},
- NORMAL:{mult:1.05,name:'NORMAL',level:8,minGap:0.13,globalGap:0.085,hold:true,flick:true,flickRate:0.16,doubleRate:0.30,streamRate:0.10,rush:false,rushRate:0,desc:'빠른 템포 • 동시치기+연타 맛보기'},
- HARD:{mult:1.25,name:'HARD',level:11,minGap:0.10,globalGap:0.06,hold:true,flick:true,flickRate:0.22,doubleRate:0.50,streamRate:0.18,rush:true,rushRate:0.75,desc:'고속 • 동시치기+연타+클라이막스 러시'},
- EXPERT:{mult:1.5,name:'EXPERT',level:15,minGap:0.07,globalGap:0.045,hold:true,flick:true,flickRate:0.26,doubleRate:0.65,streamRate:0.25,rush:true,rushRate:1.0,desc:'극악 • 광속 16분 연타+더블 점프'}
+ EASY:{mult:0.70,name:'EASY',minGap:0.24,globalGap:0.14,hold:true,flick:true,flickRate:0.10,doubleRate:0.12,streamRate:0,rush:false,rushRate:0,desc:'입문용 • 템포 업! 가끔 플릭+동시치기'},
+ NORMAL:{mult:1.05,name:'NORMAL',minGap:0.13,globalGap:0.085,hold:true,flick:true,flickRate:0.16,doubleRate:0.30,streamRate:0.10,rush:false,rushRate:0,desc:'빠른 템포 • 동시치기+연타 맛보기'},
+ HARD:{mult:1.25,name:'HARD',minGap:0.10,globalGap:0.06,hold:true,flick:true,flickRate:0.22,doubleRate:0.50,streamRate:0.18,rush:true,rushRate:0.75,desc:'고속 • 동시치기+연타+클라이막스 러시'},
+ EXPERT:{mult:1.5,name:'EXPERT',minGap:0.07,globalGap:0.045,hold:true,flick:true,flickRate:0.26,doubleRate:0.65,streamRate:0.25,rush:true,rushRate:1.0,desc:'극악 • 광속 16분 연타+더블 점프'}
 };
+// 프세카식 난이도 수치: 곡 BPM + 보면 밀도로 곡마다 다르게 산정
+// 수치 = 기본치(E2/N7/H12/EX17) + round((BPM-100)/7) + 밀도가중(E0/N1/H2/EX3)
+function diffNum(song,diffKey){
+ const base={EASY:2,NORMAL:7,HARD:12,EXPERT:17}[diffKey]||0;
+ const dens={EASY:0,NORMAL:1,HARD:2,EXPERT:3}[diffKey]||0;
+ return Math.max(1,base+Math.round((((song&&song.bpm)||140)-100)/7)+dens);
+}
+const LV_COL={EASY:'#4ade80',NORMAL:'#60a5fa',HARD:'#fb923c',EXPERT:'#f43f5e'};
+const LV_SHORT={EASY:'E',NORMAL:'N',HARD:'H',EXPERT:'EX'};
+function updateDiffNums(){
+ document.querySelectorAll('.diff-btn').forEach(b=>{
+  const lv=b.querySelector('.lv');
+  if(lv)lv.textContent='Lv.'+diffNum(selectedSong,b.dataset.diff);
+ });
+}
 function updateDiffInfo(){
  const el=document.getElementById('diffInfo');if(!el)return;
  const d=DIFFS[selectedDiff];
- el.textContent=`⭐ Lv.${d.level} ${selectedDiff} — ${d.desc} (${selectedSong.bpm}BPM)`;
+ el.textContent=`⭐ Lv.${diffNum(selectedSong,selectedDiff)} ${selectedDiff} — ${d.desc} (${selectedSong.bpm}BPM)`;
+ updateDiffNums();
 }
 
 // 송 리스트 UI
@@ -251,7 +267,7 @@ function renderSongs(){
  const all=[...SONGS,...STREAMS];if(customSong)all.push(customSong);
  all.forEach(s=>{
   const d=document.createElement('div');d.className='song-card'+(selectedSong.id===s.id?' selected':'');
-  d.innerHTML=`<div class="song-jacket" style="background:${s.jacket}">${s.emoji}</div><div class="song-title">${s.title}</div><div class="song-meta">${s.sub}</div><span class="song-bpm">♫ ${s.bpm} BPM • ${s.isStream?(s.durSec?s.durSec+'s • 원곡 STREAM':'원곡 STREAM'):s.durSec?s.durSec+'s':'LIVE'}</span>`;
+   d.innerHTML=`<div class="song-jacket" style="background:${s.jacket}">${s.emoji}</div><div class="song-title">${s.title}</div><div class="song-meta">${s.sub}</div><span class="song-bpm">♫ ${s.bpm} BPM • ${s.isStream?(s.durSec?s.durSec+'s • 원곡 STREAM':'원곡 STREAM'):s.durSec?s.durSec+'s':'LIVE'}</span><div style="margin-top:6px;font-size:12px;font-weight:800;display:flex;gap:10px;justify-content:center">${['EASY','NORMAL','HARD','EXPERT'].map(dd=>`<span style="color:${LV_COL[dd]}">${LV_SHORT[dd]} ${diffNum(s,dd)}</span>`).join('')}</div>`;
   d.onclick=()=>{selectedSong=s;renderSongs();updateDiffInfo()};songListEl.appendChild(d);
  });
 }
@@ -578,7 +594,7 @@ function showResult(){
  showScreen('result-screen');
  const total=notes.length||1;
  const acc=(counts.perfect+counts.great*0.7+counts.good*0.3)/total*100;
- document.getElementById('resultTitle').textContent=`${selectedSong.title} [${selectedDiff} Lv.${DIFFS[selectedDiff].level}]`;
+ document.getElementById('resultTitle').textContent=`${selectedSong.title} [${selectedDiff} Lv.${diffNum(selectedSong,selectedDiff)}]`;
  document.getElementById('finalScore').textContent=Math.floor(score).toLocaleString();
  document.getElementById('cPerfect').textContent=counts.perfect;
  document.getElementById('cGreat').textContent=counts.great;
@@ -999,7 +1015,7 @@ function draw(t,frameDt){
  ctx.restore();
  // 곡명
  ctx.fillStyle='#ffffffaa';ctx.font='12px sans-serif';ctx.textAlign='left';
- ctx.fillText(`${selectedSong.title} [${selectedDiff} Lv.${DIFFS[selectedDiff].level}]  BPM ${selectedSong.bpm}`,10,20);
+ ctx.fillText(`${selectedSong.title} [${selectedDiff} Lv.${diffNum(selectedSong,selectedDiff)}]  BPM ${selectedSong.bpm}`,10,20);
  // 비네트
  const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.35,W/2,H/2,Math.max(W,H)*0.75);
  vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.45)');
