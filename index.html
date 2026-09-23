@@ -136,7 +136,7 @@ input[type=range]{accent-color:#ffcb05}
     🎺=원곡 스트리밍(인터넷 필요) • ⚡🎤=네 로컬 mp3. 박자가 어긋나면 곡을 고른 뒤 ⚙ BPM 버튼으로 조절<br>
     ※ 스트리밍 음원은 archive.org에서 재생되며 레포에 포함되지 않습니다. 본인 소장 mp3는 📁 버튼으로 직접 업로드 가능 (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 21곡 + 내 MP3 2곡 • URL/로컬 재생(레포 미포함) • v3.6</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 21곡 + 내 MP3 2곡 • URL/로컬 재생(레포 미포함) • v3.7</div>
 </div>
 
 <!-- 게임 -->
@@ -307,8 +307,9 @@ function ensureStream(song){
   const cleanup=()=>{clearTimeout(to);el.removeEventListener('canplaythrough',onOk);el.removeEventListener('error',onErr)};
   const onOk=()=>{cleanup();song.url=el.src;song.ok=true;song.durSec=song.durSec||Math.floor(el.duration||0);resolve()};
   const onErr=()=>{
+   const code=(el.error&&el.error.code)||0; // 1중단 2네트워크 3디코딩 4형식미지원
    i++;
-   if(i>=urls.length){cleanup();reject(new Error('404/load failed: '+urls[0]))}
+   if(i>=urls.length){cleanup();reject(new Error('load failed(ERR'+code+'): '+urls[0]))}
    else{setCors(el,urls[i]);el.src=urls[i];el.load()}
   };
   el.addEventListener('canplaythrough',onOk);
@@ -338,7 +339,7 @@ const LV_COL={EASY:'#4ade80',NORMAL:'#60a5fa',HARD:'#fb923c',EXPERT:'#f43f5e'};
 const LV_SHORT={EASY:'E',NORMAL:'N',HARD:'H',EXPERT:'EX'};
 function songBadge(s){
  if(s.ytId)return '▶ YT';
- if(s.isStream)return (s.durSec?s.durSec+'s • ':'')+'원곡 STREAM '+(s.ok===true?'✅':s.ok===false?'❌ URL 확인!':'');
+ if(s.isStream)return (s.durSec?s.durSec+'s • ':'')+'원곡 STREAM '+(s.ok===true?'✅':s.ok===false?('❌'+(s.errCode||'')):'');
  return s.durSec?s.durSec+'s':'LIVE';
 }
 function updateDiffNums(){
@@ -373,11 +374,11 @@ STREAMS.forEach(s=>{ // 별도 프로브로 각 URL 로드 가능 여부+재생 
   let i=0;
   const probe=new Audio();probe.preload='auto';
   probe.addEventListener('canplaythrough',()=>{s.ok=true;s.url=probe.src;s.durSec=s.durSec||Math.floor(probe.duration||0);renderSongs()});
-   probe.addEventListener('error',()=>{
-    i++;
-    if(i>=urls.length){s.ok=false;renderSongs()}
-    else{setCors(probe,urls[i]);probe.src=urls[i];probe.load()}
-   });
+  probe.addEventListener('error',()=>{
+   i++;
+   if(i>=urls.length){s.ok=false;s.errCode=(probe.error&&probe.error.code)||0;renderSongs()}
+   else{setCors(probe,urls[i]);probe.src=urls[i];probe.load()}
+  });
    setCors(probe,urls[0]);probe.src=urls[0];probe.load();
  }catch(e){s.ok=false}
 });
