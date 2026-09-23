@@ -97,7 +97,7 @@ input[type=range]{accent-color:#ffcb05}
 <div id="select-screen" class="screen">
   <div class="pokeball"></div>
   <div class="title"><span>Pokémon Rhythm Stage!</span><br>프세카풍 리듬게임</div>
-  <div class="subtitle">⚡ 5레인 낙하형 • 탭 / 홀드 / 플릭 • 오마주 9곡 + 적녹 원곡 스트리밍 3곡</div>
+  <div class="subtitle">⚡ 5레인 낙하형 • 탭 / 홀드 / 플릭 • 적녹·금은 원곡 스트리밍 6곡</div>
   <div id="songList"></div>
   <div class="diff-row" id="diffRow">
     <button class="diff-btn" data-diff="EASY">EASY<span class="lv">Lv.5 ★★★★★</span></button>
@@ -110,6 +110,13 @@ input[type=range]{accent-color:#ffcb05}
     <label class="opt">슬라이드 속도 <input id="speed" type="range" min="2" max="10" step="0.5" value="5"> <b id="speedVal">5.0</b></label>
     <label class="opt">볼륨 <input id="vol" type="range" min="0" max="100" value="80"></label>
     <label class="opt"><input id="auto" type="checkbox"> 오토플레이(감상)</label>
+    <label class="opt">판정 오프셋 <b id="offsetVal">0ms</b> <button class="btn-sub" id="offMinus" style="padding:4px 10px">-2</button><button class="btn-sub" id="offPlus" style="padding:4px 10px">+2</button> <button class="btn-sub" id="calBtn">🎯 판정 테스트</button></label>
+  </div>
+  <div class="help hidden" id="calBox" style="text-align:center">
+    <b>🎯 판정 테스트 — 삐 소리에 맞춰 패드를 8번 두드려!</b><br><br>
+    <div id="calPad" style="width:150px;height:150px;margin:0 auto;border-radius:50%;background:#38bdf8;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#06283d;transition:transform .1s,background .1s;cursor:pointer;user-select:none">TAP</div>
+    <div id="calResult" style="margin-top:10px;font-size:14px;min-height:22px"></div>
+    <div class="row"><button class="btn-sub" id="calStart">▶ 시작</button><button class="btn-sub" id="calClose">닫기</button></div>
   </div>
   <div class="row">
     <button class="btn btn-play" id="startBtn">▶ LIVE START!</button>
@@ -125,10 +132,10 @@ input[type=range]{accent-color:#ffcb05}
     모바일: 레인 터치 / 플릭노트는 위로 쓸어올리기 필수<br>
     🟦 파랑 네모 막대 = 탭 &nbsp; 🟢 초록 긴바 = 홀드(끝까지 누르고 있기) &nbsp; 🟥 빨강 화살막대 = 플릭 — 모바일은 위로 쓸어올리기, 키보드는 짧게 끊어치듯 눌렀다 떼기 (그냥 누르기만 하면 MISS!)<br>
     판정: PERFECT ±45ms / GREAT ±90ms / GOOD ±130ms<br>
-    🎺 마크 곡은 원곡 스트리밍(인터넷 필요). 박자가 어긋나면 ⚙ BPM 버튼으로 조절<br>
-    ※ 곡명은 실제 포켓몬 BGM을 오마주한 것으로, 멜로디는 저작권 회피를 위한 오리지널 칩튠입니다(원곡 음원 아님). 진짜 BGM으로 하고 싶으면 mp3를 직접 업로드하세요! (개인 소장용)
+    🎺 전곡 원곡 스트리밍(인터넷 필요). 박자가 어긋나면 곡을 고른 뒤 ⚙ BPM 버튼으로 조절<br>
+    ※ 스트리밍 음원은 archive.org에서 재생되며 레포에 포함되지 않습니다. 본인 소장 mp3는 📁 버튼으로 직접 업로드 가능 (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">오마주 9곡 + 원곡 스트리밍 • 원곡은 URL 재생(레포 미포함) • v1.9</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 6곡 • URL 재생(레포 미포함) • v2.1</div>
 </div>
 
 <!-- 게임 -->
@@ -184,44 +191,7 @@ const starArr=Array.from({length:120},()=>({x:Math.random()*innerWidth,y:Math.ra
 // midi -> freq
 const mf=m=>440*Math.pow(2,(m-69)/12);
 // 각 곡: bpm, 8마디 루프 멜로디(midi, 길이는 beats)
-const SONGS=[
- {id:0,emoji:'🌿',title:'1번도로 (적·녹)',sub:'Route 1 • 모험의 시작!',bpm:142,color1:'#4ade80',color2:'#16a34a',
-  chords:[[48,52,55],[43,47,50],[45,48,52],[41,45,48]], // C G Am F
-  melody:[76,79,81,79,76,74,72,0, 76,79,81,84,81,79,76,0, 77,81,83,81,77,76,74,0, 72,74,76,74,72,0,0,0],
-  bassRoot:[36,31,33,29],jacket:'linear-gradient(135deg,#4ade80,#0284c7)'},
- {id:1,emoji:'💤',title:'포켓몬센터 (적·녹)',sub:'Pokemon Center • 상처를 치유해!',bpm:112,color1:'#f9a8d4',color2:'#8b5cf6',
-  chords:[[48,52,55],[45,48,52],[41,45,48],[43,47,50]],
-  melody:[72,76,79,76,72,0,74,0, 72,76,79,84,79,76,74,0, 72,74,76,74,72,0,0,0, 67,72,0,0,0,0,0,0],
-  bassRoot:[36,33,29,31],jacket:'linear-gradient(135deg,#f9a8d4,#6366f1)'},
- {id:2,emoji:'🔥',title:'VS 체육관 관장 (적·녹)',sub:'Gym Leader • 배지를 걸어라!',bpm:176,color1:'#f87171',color2:'#f59e0b',
-  chords:[[40,43,47],[38,41,45],[36,40,43],[43,47,50]],
-  melody:[76,76,79,76,81,79,76,74, 76,76,79,76,84,81,79,76, 77,77,81,77,83,81,79,77, 76,74,76,72,74,76,0,0],
-  bassRoot:[28,26,24,31],jacket:'linear-gradient(135deg,#ef4444,#f59e0b)'},
- {id:3,emoji:'⚡',title:'VS 라이벌 (적·녹)',sub:'Rival • 그린을 이겨라!',bpm:162,color1:'#facc15',color2:'#eab308',
-  chords:[[48,52,55],[41,45,48],[43,47,50],[48,52,55]], // C F G C
-  melody:[76,79,84,84,83,79,81,79, 76,79,84,86,84,81,79,76, 77,81,84,84,83,79,81,79, 76,74,72,74,76,0,72,0],
-  bassRoot:[36,29,31,36],jacket:'linear-gradient(135deg,#facc15,#f97316)'},
- {id:4,emoji:'🌊',title:'19번수로 파도타기 (적·녹)',sub:'Surf • 바다를 건너라!',bpm:152,color1:'#38bdf8',color2:'#0284c7',
-  chords:[[43,47,50],[40,43,47],[48,52,55],[38,42,45]], // G Em C D
-  melody:[74,76,79,81,83,81,79,76, 74,76,79,83,81,79,76,74, 76,79,81,83,86,83,81,79, 81,79,76,74,76,0,74,0],
-  bassRoot:[31,28,36,26],jacket:'linear-gradient(135deg,#38bdf8,#0ea5e9)'},
- {id:5,emoji:'🌙',title:'달맞이산 (적·녹)',sub:'Mt. Moon • 어둠 속 탐험',bpm:104,color1:'#a5b4fc',color2:'#6d28d9',
-  chords:[[45,48,52],[41,45,48],[48,52,55],[43,47,50]], // Am F C G
-  melody:[76,0,81,0,79,0,76,0, 74,0,72,0,74,0,76,0, 76,0,81,0,84,0,83,0, 81,0,79,0,76,0,0,0],
-  bassRoot:[33,29,36,31],jacket:'linear-gradient(135deg,#312e81,#7c3aed)'},
- {id:6,emoji:'🏆',title:'VS 챔피언 (적·녹)',sub:'Champion • 최후의 결전!',bpm:186,color1:'#f0abfc',color2:'#7c3aed',
-  chords:[[40,43,47],[48,52,55],[38,42,45],[40,43,47]], // Em C D Em
-  melody:[76,76,79,76,81,79,76,74, 76,76,79,76,83,81,79,76, 84,83,81,79,81,83,84,86, 88,86,84,83,81,79,76,0],
-  bassRoot:[28,36,26,28],jacket:'linear-gradient(135deg,#a855f7,#ec4899)'},
- {id:7,emoji:'🕶',title:'로켓단 아지트 (적·녹)',sub:'Rocket Hideout • 몰래 잠입!',bpm:166,color1:'#64748b',color2:'#0f172a',
-  chords:[[52,55,59],[52,55,59],[57,60,64],[59,63,66]], // Em Em Am B
-  melody:[64,0,64,67,0,64,0,62, 64,0,64,67,69,0,67,0, 64,0,64,67,0,64,0,62, 60,62,64,0,62,0,0,0],
-  bassRoot:[40,40,45,47],jacket:'linear-gradient(135deg,#334155,#000000)'},
- {id:8,emoji:'🌆',title:'금빛시티 (금·은)',sub:'Goldenrod • 성도의 아침!',bpm:156,color1:'#f9a8d4',color2:'#f59e0b',
-  chords:[[48,52,55],[45,48,52],[41,45,48],[43,47,50]], // C Am F G
-  melody:[72,76,79,76,81,79,76,74, 72,76,79,81,79,76,74,76, 77,81,84,81,79,81,77,76, 74,76,79,76,72,0,67,0],
-  bassRoot:[36,33,29,31],jacket:'linear-gradient(135deg,#f472b6,#fbbf24)'}
-];
+const SONGS=[]; // 오마주곡 제거됨 — 사용자가 링크 준 원곡(STREAMS)만 사용
 // 원곡 스트리밍 곡: 파일은 레포에 넣지 않고 URL에서 바로 재생 (깃허브엔 링크만 들어감)
 const STREAMS=[
  {id:20,emoji:'🎺',title:'1번도로 (적·녹) [원곡]',sub:'Route 1 Original • archive.org 스트리밍',bpm:140,isStream:true,
@@ -232,7 +202,16 @@ const STREAMS=[
   jacket:'linear-gradient(135deg,#38bdf8,#16a34a)',durSec:0},
  {id:22,emoji:'🎺',title:'11번도로 (적·녹) [원곡]',sub:'Route 11 Original • archive.org 스트리밍',bpm:140,isStream:true,
   url:'https://ia801400.us.archive.org/20/items/pkmn-rgby-soundtrack/Disc%201/38%20-%20Route%2011.mp3#t=0',
-  jacket:'linear-gradient(135deg,#fb923c,#16a34a)',durSec:0}
+  jacket:'linear-gradient(135deg,#fb923c,#16a34a)',durSec:0},
+ {id:23,emoji:'🏔',title:'챔피언로드 (적·녹) [원곡]',sub:'Victory Road Original • archive.org 스트리밍',bpm:150,isStream:true,
+  url:'https://ia801400.us.archive.org/20/items/pkmn-rgby-soundtrack/Disc%201/49%20-%20Victory%20Road.mp3#t=0',
+  jacket:'linear-gradient(135deg,#94a3b8,#7c2d12)',durSec:0},
+ {id:24,emoji:'🌉',title:'24번도로 (적·녹) [원곡]',sub:'Route 24 Original • archive.org 스트리밍',bpm:140,isStream:true,
+  url:'https://ia801400.us.archive.org/20/items/pkmn-rgby-soundtrack/Disc%201/31%20-%20Route%2024.mp3#t=0',
+  jacket:'linear-gradient(135deg,#60a5fa,#fbbf24)',durSec:0},
+ {id:25,emoji:'🌅',title:'26번도로 (금·은) [원곡]',sub:'Route 26 Original • archive.org 스트리밍',bpm:140,isStream:true,
+  url:'https://archive.org/download/pkmn-gsc-soundtrack/Disc%201/1-69.%20Route%2026.mp3#t=0',
+  jacket:'linear-gradient(135deg,#f472b6,#60a5fa)',durSec:0}
 ];
 let streamEl=null;
 function getStream(){if(!streamEl){streamEl=new Audio();streamEl.preload='auto'}return streamEl}
@@ -250,14 +229,14 @@ function ensureStream(song){
  });
 }
 let customSong=null; // mp3 업로드 시
-let selectedSong=SONGS[1];
+let selectedSong=STREAMS[0];
 let selectedDiff='NORMAL';
 // 4단계 난이도: 밀도(mult), 최소 간격, 동시치기/플릭/연타 확률로 명확히 차별화
 const DIFFS={
  EASY:{mult:0.70,name:'EASY',level:5,minGap:0.24,globalGap:0.14,hold:true,flick:true,flickRate:0.10,doubleRate:0.12,streamRate:0,rush:false,rushRate:0,desc:'입문용 • 템포 업! 가끔 플릭+동시치기'},
  NORMAL:{mult:1.05,name:'NORMAL',level:8,minGap:0.13,globalGap:0.085,hold:true,flick:true,flickRate:0.16,doubleRate:0.30,streamRate:0.10,rush:false,rushRate:0,desc:'빠른 템포 • 동시치기+연타 맛보기'},
- HARD:{mult:1.25,name:'HARD',level:11,minGap:0.10,globalGap:0.06,hold:true,flick:true,flickRate:0.22,doubleRate:0.50,streamRate:0.18,rush:true,rushRate:0.6,desc:'고속 • 동시치기+연타+클라이막스 러시'},
- EXPERT:{mult:1.5,name:'EXPERT',level:15,minGap:0.07,globalGap:0.045,hold:true,flick:true,flickRate:0.26,doubleRate:0.65,streamRate:0.25,rush:true,rushRate:0.9,desc:'극악 • 광속 16분 연타+더블 점프'}
+ HARD:{mult:1.25,name:'HARD',level:11,minGap:0.10,globalGap:0.06,hold:true,flick:true,flickRate:0.22,doubleRate:0.50,streamRate:0.18,rush:true,rushRate:0.75,desc:'고속 • 동시치기+연타+클라이막스 러시'},
+ EXPERT:{mult:1.5,name:'EXPERT',level:15,minGap:0.07,globalGap:0.045,hold:true,flick:true,flickRate:0.26,doubleRate:0.65,streamRate:0.25,rush:true,rushRate:1.0,desc:'극악 • 광속 16분 연타+더블 점프'}
 };
 function updateDiffInfo(){
  const el=document.getElementById('diffInfo');if(!el)return;
@@ -285,6 +264,57 @@ let customBpm=150;
 document.getElementById('customBpmBtn').onclick=()=>{
  if(selectedSong.isStream){const v=prompt('원곡 스트리밍 곡의 BPM을 입력 (박자가 어긋나면 조절)',selectedSong.bpm);if(v){selectedSong.bpm=Math.max(60,Math.min(220,parseInt(v)||140));renderSongs();updateDiffInfo()}return}
  const v=prompt('커스텀 MP3의 BPM을 입력 (모르면 120~150 사이 추측)',customBpm);if(v){customBpm=Math.max(60,Math.min(220,parseInt(v)||150));document.getElementById('customBpmVal').textContent=customBpm}};
+
+/* ============ 판정 테스트 (오프셋 캘리브레이션) ============ */
+// 메트로놈 8박에 맞춰 두드리면 평균 어긋남(ms)을 재서 songTime에 보정
+function beep(t,f){const ac=audio();const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f||880;g.gain.setValueAtTime(0.25,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.09);o.connect(g);g.connect(master);o.start(t);o.stop(t+0.1)}
+function calcOffset(taps,t0,interval,count){
+ const diffs=[];
+ for(const tp of taps){
+  const k=Math.round((tp-t0)/interval);
+  if(k<0||k>=count)continue;
+  const d=(tp-(t0+k*interval))*1000;
+  if(Math.abs(d)<=250)diffs.push(d);
+ }
+ if(!diffs.length)return null;
+ return Math.round(diffs.reduce((a,b)=>a+b,0)/diffs.length);
+}
+let cal={active:false,t0:0,taps:[],timer:null};
+function updateOffsetLabel(){const el=document.getElementById('offsetVal');if(el)el.textContent=(globalOffsetMs>0?'+':'')+globalOffsetMs+'ms'}
+function startCal(){
+ audio();
+ cal={active:true,t0:AC.currentTime+1.2,taps:[],timer:null};
+ for(let i=0;i<8;i++)beep(cal.t0+i*0.5,i===0?1320:880);
+ const pad=document.getElementById('calPad');
+ pad.textContent='0/8';
+ for(let i=0;i<8;i++){setTimeout(()=>{if(!cal.active)return;pad.style.transform='scale(1.12)';pad.style.background='#ffcb05';setTimeout(()=>{pad.style.transform='';pad.style.background=''},120)},(cal.t0-AC.currentTime+i*0.5)*1000)}
+ clearTimeout(cal.timer);
+ cal.timer=setTimeout(finishCal,(cal.t0-AC.currentTime+8*0.5+0.6)*1000);
+ document.getElementById('calBox').classList.remove('hidden');
+ document.getElementById('calResult').textContent='삐 소리에 맞춰 패드를 8번 두드려!';
+}
+function calTap(){
+ if(!cal.active)return;
+ cal.taps.push(audio().currentTime);
+ document.getElementById('calPad').textContent=Math.min(8,cal.taps.length)+'/8';
+}
+function finishCal(){
+ if(!cal.active)return;cal.active=false;clearTimeout(cal.timer);
+ const avg=calcOffset(cal.taps,cal.t0,0.5,8);
+ const r=document.getElementById('calResult');
+ if(avg==null){r.textContent='기록된 탭이 없어요. 시작 후 삐 소리에 맞춰 두드려보세요.';return}
+ const dir=avg>0?'느리게':'빠르게';
+ r.innerHTML=`평균 <b>${avg>0?'+':''}${avg}ms</b> ${dir} 침 → <button class="btn-sub" id="calApply">적용하기</button>`;
+ document.getElementById('calApply').onclick=()=>{globalOffsetMs=avg;try{localStorage.setItem('prs_offset',String(avg))}catch(e){};updateOffsetLabel();r.textContent=`✅ 오프셋 ${avg}ms 적용됨! (브라우저에 저장됨)`};
+}
+document.getElementById('calBtn').onclick=()=>{document.getElementById('calBox').classList.toggle('hidden')};
+document.getElementById('calStart').onclick=startCal;
+document.getElementById('calClose').onclick=()=>{cal.active=false;clearTimeout(cal.timer);document.getElementById('calBox').classList.add('hidden')};
+document.getElementById('calPad').addEventListener('pointerdown',e=>{e.preventDefault();calTap()});
+addEventListener('keydown',e=>{if(cal.active&&e.key===' '){e.preventDefault();calTap()}});
+document.getElementById('offMinus').onclick=()=>{globalOffsetMs-=2;try{localStorage.setItem('prs_offset',String(globalOffsetMs))}catch(e){};updateOffsetLabel()};
+document.getElementById('offPlus').onclick=()=>{globalOffsetMs+=2;try{localStorage.setItem('prs_offset',String(globalOffsetMs))}catch(e){};updateOffsetLabel()};
+updateOffsetLabel();
 
 /* ============ 오디오 엔진 ============ */
 let AC=null,master=null;
@@ -325,7 +355,7 @@ function buildChart(song,diffKey){
     if(b%8===0&&D.doubleRate>=0.2)push(4-lane,t,0,'tap'); // 강박 거울 동시치기
     else if(Math.random()<D.doubleRate*0.5)push(4-lane,t,0,'tap');
     // 클라이막스 연타: 박 후반부 16분 추가타 (타타타타!)
-    if(D.rush&&(b%16)>=12&&Math.random()<D.rushRate){
+    if(D.rush&&(b%16)>=10&&Math.random()<D.rushRate){
      let rl=lane+(dir!==0?dir:(Math.random()<0.5?1:-1));
      if(rl<0||rl>4)rl=4-lane;
      if(rl===lane)rl=(lane+2)%5;
@@ -382,7 +412,7 @@ function buildChart(song,diffKey){
     }
     if(diffKey==='EXPERT'&&barPos===8&&Math.random()<0.4)push((lane+1)%5,time,0,'tap');
     // 클라이막스 연타 (HARD+): 멜로디 뒤에 붙는 16분 추가타 — 타타타타!
-    if(D.rush&&(s%64)>=48&&Math.random()<D.rushRate){
+    if(D.rush&&(s%64)>=40&&Math.random()<D.rushRate){
      let rd=lane-prevLane;
      rd=rd===0?(Math.random()<0.5?1:-1):Math.max(-1,Math.min(1,rd));
      let rl=lane+rd;
@@ -401,22 +431,25 @@ function buildChart(song,diffKey){
     }
     s++;
    }
+   }
   }
-  notes.sort((a,b)=>a.time-b.time);
+ notes.sort((a,b)=>a.time-b.time);
  // 최소 간격 필터: 같은 레인 minGap, 전체 globalGap 미만 노트 제거
  // (같은 레인 동시각 중복은 무조건 제거, 다른 레인 동시치기는 유지)
- const out=[];const lastLane={};let lastAny=-9;
+ const out=[];const lastLane={};const blocked={};let lastAny=-9;
  for(const n of notes){
   const prevLane=lastLane[n.lane];
   const gapLane=n.time-(prevLane??-9);
   const gapAny=n.time-lastAny;
- if(prevLane!==undefined&&gapLane<0.03)continue; // 중복 제거
- const isChord=gapAny<0.03&&gapLane>=D.minGap; // 진짜 동시치기만 유지 (같은 레인 촘촘 겹침은 제거)
+  if(prevLane!==undefined&&gapLane<0.03)continue; // 중복 제거
+  const blockUntil=blocked[n.lane]??-9;
+  if(n.time<blockUntil-1e-9)continue; // 활성 홀드 구간과 겹치면 제거 (홀드 중 콤보 끊김 방지)
+  const isChord=gapAny<0.03&&gapLane>=D.minGap; // 진짜 동시치기만 유지 (같은 레인 촘촘 겹침은 제거)
   if(!isChord&&(gapLane<D.minGap||gapAny<D.globalGap))continue;
   out.push(n);lastLane[n.lane]=n.time;lastAny=n.time;
+  blocked[n.lane]=n.kind==='hold'?n.time+n.dur+0.10:n.time+0.03; // 홀드 꼬리+재입력 여유 확보
  }
-  return out;
- }
+ return out;
 }
 
 /* 음악 스케줄링 (내장곡) */
@@ -455,6 +488,7 @@ addEventListener('resize',()=>{if(!document.getElementById('game-screen').classL
 const LANES=5,KEYS=['s','d','f','j','k'];
 let notes=[],songStart=0,songPlaying=false,raf=0,lastFrameT=0;
 let score=0,combo=0,maxCombo=0,life=100,counts={perfect:0,great:0,good:0,miss:0};
+let globalOffsetMs=parseInt(localStorage.getItem('prs_offset')||'0')||0; // 판정 오프셋 (캘리브레이션)
 let speed=5,autoPlay=false,isCustomPlaying=false,customBuffer=null,customSource=null;
 let laneFlash=[0,0,0,0,0],effects=[],paused=false,pauseTime=0;
 let judgeEl=document.getElementById('judgePopup');
@@ -533,7 +567,7 @@ async function beginSong(song){
  songPlaying=true;lastFrameT=0;
  cancelAnimationFrame(raf);loop();
 }
-function songTime(){return audio().currentTime-songStart}
+function songTime(){return audio().currentTime-songStart-globalOffsetMs/1000} // 오프셋 보정 적용
 function endSong(){
  songPlaying=false;cancelAnimationFrame(raf);
  if(customSource){try{customSource.stop()}catch(e){}}
@@ -690,7 +724,7 @@ function hitNote(n,j,lane){
  if(n.kind==='hold'){
   n.judged=true;n.holdState='holding';n.holdLane=lane;
   applyJudge(j);effects.push({lane,time:performance.now(),txt:j});spawnBurst(lane,jColor(j),8);spawnFloat(lane,combo+' COMBO',jColor(j));
-  hitSE(true);
+  hitSE(true);popup(j);
  }else{
   n.judged=true;applyJudge(j);spawnFloat(lane,combo+' COMBO',jColor(j));
   effects.push({lane,time:performance.now(),txt:j});spawnBurst(lane,jColor(j),12);
