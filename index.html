@@ -97,7 +97,7 @@ input[type=range]{accent-color:#ffcb05}
 <div id="select-screen" class="screen">
   <div class="pokeball"></div>
   <div class="title"><span>포케리듬</span><br>프세카풍 리듬게임</div>
-  <div class="subtitle">⚡ 4레인 낙하형 • 탭 / 홀드 / 플릭 • 적녹·금은 원곡 스트리밍 6곡</div>
+  <div class="subtitle">⚡ 4레인 낙하형 • 탭 / 홀드 / 플릭 • 원곡 스트리밍 21곡 + 내 MP3 2곡</div>
   <div id="songList"></div>
   <div class="diff-row" id="diffRow">
     <button class="diff-btn" data-diff="EASY">EASY<span class="lv">Lv.5 ★★★★★</span></button>
@@ -132,10 +132,10 @@ input[type=range]{accent-color:#ffcb05}
     모바일: 레인 터치 / 플릭노트는 위로 쓸어올리기 필수<br>
     🟦 파랑 네모 막대 = 탭 &nbsp; 🟢 초록 긴바 = 홀드(끝까지 누르고 있기) &nbsp; 🟥 빨강 화살막대 = 플릭 — 모바일은 위로 쓸어올리기, 키보드는 짧게 끊어치듯 눌렀다 떼기 (그냥 누르기만 하면 MISS!)<br>
     판정: PERFECT ±45ms / GREAT ±90ms / GOOD ±130ms<br>
-    🎺 전곡 원곡 스트리밍(인터넷 필요). 박자가 어긋나면 곡을 고른 뒤 ⚙ BPM 버튼으로 조절<br>
+    🎺=원곡 스트리밍(인터넷 필요) • ⚡🎤=네 로컬 mp3. 박자가 어긋나면 곡을 고른 뒤 ⚙ BPM 버튼으로 조절<br>
     ※ 스트리밍 음원은 archive.org에서 재생되며 레포에 포함되지 않습니다. 본인 소장 mp3는 📁 버튼으로 직접 업로드 가능 (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 6곡 • URL 재생(레포 미포함) • v2.8</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 21곡 + 내 MP3 2곡 • URL/로컬 재생(레포 미포함) • v3.3</div>
 </div>
 
 <!-- 게임 -->
@@ -217,7 +217,58 @@ const STREAMS=[
   jacket:'linear-gradient(135deg,#60a5fa,#fbbf24)',durSec:0},
  {id:25,emoji:'🌅',title:'26번도로 (금·은) [원곡]',sub:'Route 26 Original • archive.org 스트리밍',bpm:140,isStream:true,
   url:'https://archive.org/download/pkmn-gsc-soundtrack/Disc%201/1-69.%20Route%2026.mp3#t=0',
-  jacket:'linear-gradient(135deg,#f472b6,#60a5fa)',durSec:0}
+  jacket:'linear-gradient(135deg,#f472b6,#60a5fa)',durSec:0},
+ {id:40,emoji:'🏥',title:'포켓몬센터 (적·녹) [원곡]',sub:'Pokemon Center Original • archive.org 스트리밍',bpm:100,isStream:true,
+  url:'https://archive.org/download/pkmn-rgby-soundtrack/Disc%201/17%20-%20Pok%C3%A9mon%20Center.mp3',
+  jacket:'linear-gradient(135deg,#f9a8d4,#16a34a)',durSec:0},
+ {id:41,emoji:'🕶',title:'로켓단 아지트 (적·녹) [원곡]',sub:'Rocket Hideout Original • archive.org 스트리밍',bpm:130,isStream:true,
+  url:'https://archive.org/download/pkmn-rgby-soundtrack/Disc%201/43%20-%20Rocket%20Hideout.mp3',
+  jacket:'linear-gradient(135deg,#334155,#000000)',durSec:0},
+ {id:42,emoji:'⚔️',title:'VS 트레이너 (적·녹) [원곡]',sub:'Vs Trainer Original • archive.org 스트리밍',bpm:152,isStream:true,
+  url:'https://archive.org/download/pkmn-rgby-soundtrack/Disc%201/08%20-%20Battle%21%20(Trainer).mp3',
+  jacket:'linear-gradient(135deg,#f87171,#7c2d12)',durSec:0},
+ {id:43,emoji:'🔥',title:'VS 체육관 관장 (적·녹) [원곡]',sub:'Vs Gym Leader Original • archive.org 스트리밍',bpm:158,isStream:true,
+  url:'https://archive.org/download/pkmn-rgby-soundtrack/Disc%201/25%20-%20Battle%21%20(Gym%20Leader).mp3',
+  jacket:'linear-gradient(135deg,#ef4444,#f59e0b)',durSec:0},
+ {id:44,emoji:'👻',title:'라벤더타운 (적·녹) [원곡]',sub:'Lavender Town Original • archive.org 스트리밍',bpm:90,isStream:true,
+  url:'https://archive.org/download/pkmn-rgby-soundtrack/Disc%201/39%20-%20Lavender%20Town.mp3',
+  jacket:'linear-gradient(135deg,#312e81,#a855f7)',durSec:0},
+ {id:45,emoji:'🚲',title:'자전거 (적·녹) [원곡]',sub:'Cycling Original • archive.org 스트리밍',bpm:150,isStream:true,
+  url:'https://archive.org/download/pkmn-rgby-soundtrack/Disc%201/37%20-%20Cycling.mp3',
+  jacket:'linear-gradient(135deg,#38bdf8,#fbbf24)',durSec:0},
+ {id:46,emoji:'🌙',title:'달맞이산 (적·녹) [원곡]',sub:'Mt Moon Original • archive.org 스트리밍',bpm:100,isStream:true,
+  url:'https://archive.org/download/pkmn-rgby-soundtrack/Disc%201/29%20-%20Mt.%20Moon.mp3',
+  jacket:'linear-gradient(135deg,#1e1b4b,#7c3aed)',durSec:0},
+ {id:47,emoji:'⚡',title:'VS 라이벌 결전 (적·녹) [원곡]',sub:'Final Battle Rival Original • archive.org 스트리밍',bpm:165,isStream:true,
+  url:'https://archive.org/download/pkmn-rgby-soundtrack/Disc%201/50%20-%20Final%20Battle%21%20(Rival).mp3',
+  jacket:'linear-gradient(135deg,#facc15,#ef4444)',durSec:0},
+ {id:50,emoji:'💿',title:'Route 11 (Aoki ver.)',sub:'드라이브 직링크 • Morikazu Aoki (74초)',bpm:140,isStream:true,
+  url:'https://drive.google.com/uc?export=download&id=1aIKxRf9kuyhFwfi3oQaGiFY_JXt6mgwu',
+  jacket:'linear-gradient(135deg,#38bdf8,#1e3a8a)',durSec:0},
+ {id:51,emoji:'💿',title:'Route 24 (Masuda ver.)',sub:'드라이브 직링크 • Junichi Masuda (49초)',bpm:140,isStream:true,
+  url:'https://drive.google.com/uc?export=download&id=1rB_UJYmkQ5XHoyQH9XwEV1pGgbG7h3De',
+  jacket:'linear-gradient(135deg,#4ade80,#1e3a8a)',durSec:0},
+ {id:52,emoji:'💿',title:'Route 1 (Ichinose ver.)',sub:'드라이브 직링크 • Go Ichinose (76초)',bpm:140,isStream:true,
+  url:'https://drive.google.com/uc?export=download&id=15ooByDidgCgGqGvWvc4ZVT1-u6tjga4Y',
+  jacket:'linear-gradient(135deg,#facc15,#1e3a8a)',durSec:0},
+ {id:53,emoji:'💿',title:'피카츄알 [드라이브]',sub:'드라이브 직링크 • 네필 (30초) • 어디서든 재생',bpm:140,isStream:true,
+  url:'https://drive.google.com/uc?export=download&id=1gTSdGzEAHSPffhDghRMvi9p8Xrm1xeys',
+  jacket:'linear-gradient(135deg,#facc15,#f97316)',durSec:0},
+ {id:54,emoji:'💿',title:'한 남자 이야기 [드라이브]',sub:'드라이브 직링크 • YOUNG (79초) • 어디서든 재생',bpm:110,isStream:true,
+  url:'https://drive.google.com/uc?export=download&id=1wjNObceEgsuv7D_W6x3iNq6iE0to0pW-',
+  jacket:'linear-gradient(135deg,#8b5cf6,#ec4899)',durSec:0},
+ {id:55,emoji:'💿',title:'Title Screen (Masuda ver.)',sub:'드라이브 직링크 • Junichi Masuda (102초)',bpm:120,isStream:true,
+  url:'https://drive.google.com/uc?export=download&id=11wter7_1Mgb4mFmYadL3_t0W0GeE29Aq',
+  jacket:'linear-gradient(135deg,#1e1b4b,#38bdf8)',durSec:0},
+ {id:56,emoji:'💿',title:'Route 1 (Masuda ver.)',sub:'드라이브 직링크 • Junichi Masuda (57초)',bpm:140,isStream:true,
+  url:'https://drive.google.com/uc?export=download&id=1p_3K8io5-brSL39kEzGHutf2URvz6ayw',
+  jacket:'linear-gradient(135deg,#4ade80,#1e3a8a)',durSec:0},
+ {id:30,emoji:'⚡',title:'피카츄알',sub:'로컬 mp3 • 네 파일! (30초)',bpm:140,isStream:true,
+  url:'music/'+encodeURI('피카츄🐁알🪺깠는데 피츄나왔죠🤯.mp3'),
+  jacket:'linear-gradient(135deg,#facc15,#f97316)',durSec:0},
+ {id:31,emoji:'🎤',title:'한 남자 이야기',sub:'로컬 mp3 • 네 파일! (79초)',bpm:110,isStream:true,
+  url:'music/'+encodeURI('한남자의이야기.mp3'),
+  jacket:'linear-gradient(135deg,#8b5cf6,#ec4899)',durSec:0}
 ];
 let streamEl=null;
 function getStream(){if(!streamEl){streamEl=new Audio();streamEl.preload='auto'}return streamEl}

@@ -8,7 +8,7 @@
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
 프로젝트 세카이(프세카) 스타일의 **4레인 낙하형 리듬게임**입니다.
-적녹·금은 원곡 스트리밍 6곡 + 내 MP3 업로드 플레이 지원. 설치 없이 브라우저에서 바로 실행됩니다.
+적녹·금은 원곡 스트리밍 + 드라이브 직링크 21곡 + 내 MP3 업로드 플레이 지원. 설치 없이 브라우저에서 바로 실행됩니다.
 
 ## ▶️ 바로 플레이
 
@@ -34,7 +34,7 @@
 - **정밀 판정**: PERFECT ±45ms / GREAT ±90ms / GOOD ±130ms
 - **스코어 시스템**: 1,000,000점 만점, 콤보, MAX COMBO, 정확도, 랭크 SSS~F, FULL COMBO 뱃지
 - **라이프 바**: MISS/GOOD 감소, PERFECT 회복
-- **원곡 스트리밍 6곡**: archive.org URL에서 바로 재생 (음원 미포함, 인터넷 필요)
+- **원곡 스트리밍 21곡**: archive.org / 구글 드라이브 URL에서 바로 재생 (음원 미포함, 인터넷 필요)
 - **커스텀 MP3 플레이**: 본인 소장 포켓몬 BGM 업로드 → BPM 기준 채보 자동 생성
 - **클라이막스 연타**: HARD+ 후반부 16분음표 러시 (타타타타!)
 - **모바일 대응**: 터치 + 플릭 스와이프, 반응형 캔버스
@@ -53,8 +53,26 @@
 | 🎺 | 챔피언로드 (적·녹) [원곡] | Victory Road Original | 150* |
 | 🎺 | 24번도로 (적·녹) [원곡] | Route 24 Original | 140* |
 | 🎺 | 26번도로 (금·은) [원곡] | Route 26 Original | 140* |
+| 🏥 | 포켓몬센터 (적·녹) [원곡] | Pokemon Center Original | 100* |
+| 🕶 | 로켓단 아지트 (적·녹) [원곡] | Rocket Hideout Original | 130* |
+| ⚔️ | VS 트레이너 (적·녹) [원곡] | Vs Trainer Original | 152* |
+| 🔥 | VS 체육관 관장 (적·녹) [원곡] | Vs Gym Leader Original | 158* |
+| 👻 | 라벤더타운 (적·녹) [원곡] | Lavender Town Original | 90* |
+| 🚲 | 자전거 (적·녹) [원곡] | Cycling Original | 150* |
+| 🌙 | 달맞이산 (적·녹) [원곡] | Mt Moon Original | 100* |
+| ⚡ | VS 라이벌 결전 (적·녹) [원곡] | Final Battle Rival Original | 165* |
+| 💿 | Route 11 (Aoki ver.) | 드라이브 직링크 (74초) | 140* |
+| 💿 | Route 24 (Masuda ver.) | 드라이브 직링크 (49초) | 140* |
+| 💿 | Route 1 (Ichinose ver.) | 드라이브 직링크 (76초) | 140* |
+| 💿 | 피카츄알 [드라이브] | 드라이브 직링크 • 네필 (30초) | 140* |
+| 💿 | 한 남자 이야기 [드라이브] | 드라이브 직링크 • YOUNG (79초) | 110* |
+| 💿 | Title Screen (Masuda ver.) | 드라이브 직링크 (102초) | 120* |
+| 💿 | Route 1 (Masuda ver.) | 드라이브 직링크 (57초) | 140* |
+| ⚡ | 피카츄알 | 로컬 mp3 (30초) | 140* |
+| 🎤 | 한 남자 이야기 | 로컬 mp3 (79초) | 110* |
 
 > 🎺 * 표시 BPM은 추정치 — 게임 내 ⚙ 버튼으로 곡별 조절 가능. 음원 파일은 archive.org URL에서 스트리밍되며 레포에 포함되지 않습니다.
+> ⚡🎤 로컬 mp3 2곡은 `music/` 폴더 전용이며 `.gitignore`로 푸시에서 제외됩니다. GitHub Pages에서는 재생 안 되고, 로컬(크롬북)에서 `index.html`을 직접 열어 플레이하세요.
 
 ## 🎮 조작법
 

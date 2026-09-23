@@ -1,0 +1,7 @@
+# 로컬 전용 음원 (저작권/용량 문제로 public 푸시 제외)
+# 게임은 music/ 폴더의 mp3를 상대경로로 재생합니다
+music/*.mp3
+music/*.wav
+music/*.ogg
+music/*.m4a
+music/*.flac
