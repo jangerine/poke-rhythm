@@ -135,7 +135,7 @@ input[type=range]{accent-color:#ffcb05}
     🎺 전곡 원곡 스트리밍(인터넷 필요). 박자가 어긋나면 곡을 고른 뒤 ⚙ BPM 버튼으로 조절<br>
     ※ 스트리밍 음원은 archive.org에서 재생되며 레포에 포함되지 않습니다. 본인 소장 mp3는 📁 버튼으로 직접 업로드 가능 (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 6곡 • URL 재생(레포 미포함) • v2.4</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 6곡 • URL 재생(레포 미포함) • v2.5</div>
 </div>
 
 <!-- 게임 -->
@@ -288,6 +288,7 @@ document.getElementById('customBpmBtn').onclick=()=>{
  const v=prompt('커스텀 MP3의 BPM을 입력 (모르면 120~150 사이 추측)',customBpm);if(v){customBpm=Math.max(60,Math.min(220,parseInt(v)||150));document.getElementById('customBpmVal').textContent=customBpm}};
 
 /* ============ 판정 테스트 (오프셋 캘리브레이션) ============ */
+let globalOffsetMs=parseInt(localStorage.getItem('prs_offset')||'0')||0; // 선언 순서 주의: 아래 updateOffsetLabel() 호출보다 먼저 있어야 함
 // 메트로놈 8박에 맞춰 두드리면 평균 어긋남(ms)을 재서 songTime에 보정
 function beep(t,f){const ac=audio();const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f||880;g.gain.setValueAtTime(0.25,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.09);o.connect(g);g.connect(master);o.start(t);o.stop(t+0.1)}
 function calcOffset(taps,t0,interval,count){
@@ -510,7 +511,6 @@ addEventListener('resize',()=>{if(!document.getElementById('game-screen').classL
 const LANES=5,KEYS=['s','d','f','j','k'];
 let notes=[],songStart=0,songPlaying=false,raf=0,lastFrameT=0,cdTimer=null;
 let score=0,combo=0,maxCombo=0,life=100,counts={perfect:0,great:0,good:0,miss:0};
-let globalOffsetMs=parseInt(localStorage.getItem('prs_offset')||'0')||0; // 판정 오프셋 (캘리브레이션)
 let speed=5,autoPlay=false,isCustomPlaying=false,customBuffer=null,customSource=null;
 let laneFlash=[0,0,0,0,0],effects=[],paused=false,pauseTime=0;
 let judgeEl=document.getElementById('judgePopup');
