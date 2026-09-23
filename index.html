@@ -135,7 +135,7 @@ input[type=range]{accent-color:#ffcb05}
     🎺 전곡 원곡 스트리밍(인터넷 필요). 박자가 어긋나면 곡을 고른 뒤 ⚙ BPM 버튼으로 조절<br>
     ※ 스트리밍 음원은 archive.org에서 재생되며 레포에 포함되지 않습니다. 본인 소장 mp3는 📁 버튼으로 직접 업로드 가능 (개인 소장용)
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 6곡 • URL 재생(레포 미포함) • v2.7</div>
+  <div style="margin-top:10px;font-size:12px;color:#64748b">원곡 스트리밍 6곡 • URL 재생(레포 미포함) • v2.8</div>
 </div>
 
 <!-- 게임 -->
@@ -221,17 +221,39 @@ const STREAMS=[
 ];
 let streamEl=null;
 function getStream(){if(!streamEl){streamEl=new Audio();streamEl.preload='auto'}return streamEl}
+function streamCandidates(song){
+ // 파일명 추측이 틀렸을 경우 대비: _vbr 접미 / 평탄 구조 변형도 자동 시도
+ const u=song.url;
+ const out=[u];
+ const m=u.match(/^(.*)(\.mp3[^/]*)$/i);
+ if(m)out.push(m[1]+'_vbr'+m[2]);
+ const flat=u.replace(/Disc%201\//,'');
+ if(flat!==u){
+  out.push(flat);
+  const m2=flat.match(/^(.*)(\.mp3[^/]*)$/i);
+  if(m2)out.push(m2[1]+'_vbr'+m2[2]);
+ }
+ return [...new Set(out)];
+}
 function ensureStream(song){
  const el=getStream();
- if(el.dataset.key!==String(song.id)){el.dataset.key=String(song.id);el.src=song.url;el.load()}
+ if(el.dataset.key===String(song.id)&&(el.readyState>=3||song.durSec)){song.durSec=song.durSec||Math.floor(el.duration||0);return Promise.resolve()}
+ el.dataset.key=String(song.id);
+ const urls=streamCandidates(song);
+ let i=0;
  return new Promise((resolve,reject)=>{
-  if(el.readyState>=3){song.durSec=song.durSec||Math.floor(el.duration||0);resolve();return}
-  const to=setTimeout(()=>{cleanup();reject(new Error('timeout'))},20000);
-  const done=()=>{clearTimeout(to);cleanup();song.durSec=song.durSec||Math.floor(el.duration||0);resolve()};
-  const fail=()=>{clearTimeout(to);cleanup();reject(new Error('load failed'))};
-  const cleanup=()=>{el.removeEventListener('canplaythrough',done);el.removeEventListener('error',fail)};
-  el.addEventListener('canplaythrough',done);
-  el.addEventListener('error',fail);
+  const to=setTimeout(()=>{cleanup();reject(new Error('timeout: '+urls[i]))},25000);
+  const cleanup=()=>{clearTimeout(to);el.removeEventListener('canplaythrough',onOk);el.removeEventListener('error',onErr)};
+  const onOk=()=>{cleanup();song.url=el.src;song.ok=true;song.durSec=song.durSec||Math.floor(el.duration||0);resolve()};
+  const onErr=()=>{
+   i++;
+   if(i>=urls.length){cleanup();reject(new Error('404/load failed: '+urls[0]))}
+   else{el.src=urls[i];el.load()}
+  };
+  el.addEventListener('canplaythrough',onOk);
+  el.addEventListener('error',onErr);
+  el.src=urls[0];el.load();
+  if(el.readyState>=3)onOk();
  });
 }
 let customSong=null; // mp3 업로드 시
@@ -278,12 +300,18 @@ function renderSongs(){
  });
 }
 renderSongs();updateDiffInfo();
-STREAMS.forEach(s=>{ // 별도 프로브로 각 URL 로드 가능 여부+재생 시간 확인 (카드에 ✅/❌ 표시)
+STREAMS.forEach(s=>{ // 별도 프로브로 각 URL 로드 가능 여부+재생 시간 확인 (카드에 ✅/❌ 표시, 성공한 URL로 자동 교체)
  try{
+  const urls=streamCandidates(s);
+  let i=0;
   const probe=new Audio();probe.preload='auto';
-  probe.addEventListener('canplaythrough',()=>{s.ok=true;s.durSec=s.durSec||Math.floor(probe.duration||0);renderSongs()});
-  probe.addEventListener('error',()=>{s.ok=false;renderSongs()});
-  probe.src=s.url;probe.load();
+  probe.addEventListener('canplaythrough',()=>{s.ok=true;s.url=probe.src;s.durSec=s.durSec||Math.floor(probe.duration||0);renderSongs()});
+  probe.addEventListener('error',()=>{
+   i++;
+   if(i>=urls.length){s.ok=false;renderSongs()}
+   else{probe.src=urls[i];probe.load()}
+  });
+  probe.src=urls[0];probe.load();
  }catch(e){s.ok=false}
 });
 document.querySelectorAll('.diff-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.diff-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedDiff=b.dataset.diff;updateDiffInfo()});
