@@ -12,9 +12,9 @@
 
 ## ▶️ 바로 플레이
 
-### 🎮 [https://jangerine.github.io/pokemon-rhythm-stage/](https://jangerine.github.io/pokemon-rhythm-stage/) ← 클릭하면 바로 게임 시작!
+### 🎮 [https://jangerine.github.io/poke-rhythm/](https://jangerine.github.io/poke-rhythm/) ← 클릭하면 바로 게임 시작!
 
-📂 레포: [https://github.com/jangerine/pokemon-rhythm-stage](https://github.com/jangerine/pokemon-rhythm-stage)
+📂 레포: [https://github.com/jangerine/poke-rhythm](https://github.com/jangerine/poke-rhythm)
 
 ---
 
